@@ -57,6 +57,14 @@ const SCENES = {
     water: .84, haze: '#16364a', ink: '#020509', p: ['crystals', 60, '#c4f2ff'] },
 };
 
+// Colours for room lights: the horizon glow, the particles and the sun/moon.
+export function lampColours(id) {
+  const s = SCENES[id] || SCENES.alps;
+  const lum = h => { const n = parseInt(h.slice(1), 16); return ((n >> 16 & 255) + (n >> 8 & 255) + (n & 255)) / 765; };
+  const body = s.body?.c || s.p[2];
+  return { base: s.sky[2], note: lum(s.p[2]) > 0.3 ? s.p[2] : body, body };
+}
+
 // ---- helpers ---------------------------------------------------------------
 function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));

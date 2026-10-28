@@ -7,7 +7,8 @@ on screen and every sound is generated in the browser.
 index.html ─ app.js ─┬─ scales.js   data + matching
                      ├─ audio.js    Web Audio engine
                      ├─ wheel.js    SVG wheel
-                     └─ scene.js    canvas landscape
+                     ├─ scene.js    canvas landscape
+                     └─ hue.js ─ http://127.0.0.1:8811 ─ scripts/hue-relay.mjs ─ Hue bridge
 ```
 
 ## Origin
@@ -126,6 +127,54 @@ voice and optionally `drone: true`.
 **Adding a scene:** add a config to `SCENES` (and new props to `PROPS` if
 needed), then point a region or scale `scene` at it.
 
+## Philips Hue — hue.js + scripts/hue-relay.mjs
+
+Room lights follow the scene and flash with the music.
+
+- **Why a relay:** the site is HTTPS, so the browser can't call the bridge's
+  plain-HTTP API (mixed content), and the bridge username must not reach a
+  public page. `node scripts/hue-relay.mjs` listens on `127.0.0.1:8811`. It
+  reads the bridge IP and username from `~/.config/hue/bridge.json`, and only
+  accepts requests from `https://gamut.sankhacooray.com` and localhost origins.
+  It answers Chrome's Private Network Access preflight.
+- **Relay endpoints:**
+
+  | Endpoint | What |
+  |---|---|
+  | `GET /hue` | `{lights:[{id,name}], sent, error}`, listing reachable colour lights (all of them are used) |
+  | `POST /hue/ambient` | `{xy, bri, ms}` |
+  | `POST /hue/pulse` | `{xy, bri, back:{xy,bri}, hold, fade}` |
+  | `POST /hue/release` | restores each light's saved state |
+
+- **How the relay sends commands:**
+  - Commands are coalesced per light (the latest one wins) and paced at
+    90 ms, within the bridge's budget of about 10 commands a second.
+  - Each light's state is saved the first time it's touched. It's restored on
+    release and on Ctrl+C.
+- **Colours:** `lampColours(sceneId)` in scene.js gives `base`, `note` and
+  `body`:
+  - `base` is the horizon colour (`sky[2]`), which sets the ambient light at
+    bri 110.
+  - `note` is the particle colour, or the sun or moon colour when the particle
+    colour is dark.
+  - `body` is the sun or moon colour.
+
+  Each note flashes a mix of `note` and `body`, by the note's position in the
+  scale, then fades back to `base` over 450 ms. `vivid()` keeps the hue but
+  boosts saturation, because lamps wash dusky colours out to white. Whites stay
+  white. The colours are converted to CIE xy (Wide RGB D65).
+- **Opt-in:**
+  - Probing 127.0.0.1 from a public page can raise Chrome's local-network
+    permission prompt, so nothing is probed until the user turns Hue on in one
+    of these ways:
+    - Shift+H;
+    - visiting with `?hue`;
+    - being on a localhost origin.
+  - The choice is stored under the `gamut-hue` localStorage key.
+  - The "Hue lights" chip appears only when the relay answers.
+- Safari blocks the relay (no Private Network Access support), so use Chrome
+  or Edge.
+
 ## app.js
 
 - **State:** `{scale, root, voice, pattern: up|updown|down, bpm, drone, edit, custom}`.
@@ -148,6 +197,7 @@ needed), then point a region or scale `scene` at it.
   | ↑ / ↓ | region |
   | A–L, 1–9 | play scale degrees |
   | D | drone |
+  | Shift+H | Hue lights on/off (connects to the relay the first time) |
   | Esc | close About |
 
 - **URL hash:** `#<scaleId>/<root>`, e.g. `#hijaz/D`. Updated with

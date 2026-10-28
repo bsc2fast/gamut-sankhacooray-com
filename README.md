@@ -37,6 +37,18 @@ scripts/shoot.mjs     headless Chrome screenshots + console errors
 cd public && python3 -m http.server 8810 --bind 127.0.0.1
 ```
 
+## Hue lights
+
+Philips Hue lamps on the same network take each scene's colours and flash with
+every note.
+
+```
+node scripts/hue-relay.mjs      # reads ~/.config/hue/bridge.json
+```
+
+Then open https://gamut.sankhacooray.com/?hue in Chrome and allow local network
+access if asked. Shift+H toggles the lights.
+
 ## Deploy
 
 Cloudflare Worker `gamut-sankhacooray` (static assets only):

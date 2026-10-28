@@ -1,7 +1,8 @@
 import { REGIONS, SCALES, NOTE_NAMES, byId, regionOf, matches } from './scales.js';
 import { Engine, VOICES } from './audio.js';
 import { Wheel } from './wheel.js';
-import { Scene } from './scene.js';
+import { Scene, lampColours } from './scene.js';
+import { Hue } from './hue.js';
 
 const $ = id => document.getElementById(id);
 const URL_NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Fs', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -13,6 +14,7 @@ const engine = new Engine();
 const scene = new Scene($('scene'));
 const state = { scale: byId.hijaz, root: 0, voice: 'auto', pattern: 'updown', bpm: 150, drone: false, edit: false, custom: null };
 let playing = null;
+const hue = new Hue(renderHue);
 
 const wheel = new Wheel($('wheel'), {
   onNode: i => playDegree(i),
@@ -124,6 +126,7 @@ function renderStage() {
   });
 
   scene.set(s.scene || r.scene, isLight());
+  hue.ambient(lampColours(s.scene || r.scene));
   renderMatches();
   document.title = `${s.name} · Gamut`;
 }
@@ -189,6 +192,13 @@ function renderControls() {
   $('edit-btn').setAttribute('aria-pressed', state.edit);
 }
 
+function renderHue() {
+  const b = $('hue-btn');
+  b.hidden = !hue.lights.length;
+  b.setAttribute('aria-pressed', hue.on);
+  b.title = hue.lights.map(l => l.name).join(', ');
+}
+
 function update(push = true) {
   renderRegions(); renderList(); renderStage(); renderControls();
   if (state.drone) startDrone();
@@ -222,12 +232,12 @@ function toggleCustom(rel) {
   if (!has) note(rootMidi() + rel);
 }
 
-function note(m) { engine.note(m, null, 0.5, voice()); scene.pulse(0.5); }
+function note(m, pos = 0) { engine.note(m, null, 0.5, voice()); scene.pulse(0.5); hue.pulse(pos, 0.8); }
 
 function playDegree(i) {
   const s = steps(); if (i == null || i >= s.length * 2) return;
   const oct = Math.floor(i / s.length), k = i % s.length;
-  note(rootMidi() + s[k] + oct * 12);
+  note(rootMidi() + s[k] + oct * 12, k / s.length);
   wheel.play(k);
   flashNote(k);
   setTimeout(() => { wheel.play(null); flashNote(-1); }, 280);
@@ -252,7 +262,7 @@ function play() {
     step, voice: voice(),
     onStep: (i, prog) => {
       if (i === -1) { stop(); return; }
-      if (i !== null) { wheel.play(nodes[i]); flashNote(nodes[i]); scene.pulse(0.55); }
+      if (i !== null) { wheel.play(nodes[i]); flashNote(nodes[i]); scene.pulse(0.55); hue.pulse(nodes[i] / steps().length); }
       wheel.cometAt(prog, nodes);
     },
   });
@@ -303,12 +313,14 @@ $('drone-btn').onclick = () => {
   renderControls();
 };
 $('edit-btn').onclick = () => { state.edit = !state.edit; renderControls(); };
+$('hue-btn').onclick = () => hue.set(!hue.on);
 $('about-btn').onclick = () => { $('about').hidden = false; };
 $('about').onclick = () => { $('about').hidden = true; };
 engine.onNote(() => {});
 
 addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey || e.target.tagName === 'INPUT') return;
+  if (e.key === 'H') { hue.lights.length ? hue.set(!hue.on) : hue.connect(); return; }
   const k = e.key.toLowerCase();
   if (k === 'escape') { $('about').hidden = true; return; }
   if (k === ' ') { e.preventDefault(); play(); return; }

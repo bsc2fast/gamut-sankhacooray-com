@@ -30,7 +30,18 @@ Hooks already in place:
 - `state.scale.steps` and `state.root` give the pitch set.
 - `wheel.play(i)` lights a node.
 
+## Done since v1
+
+- Philips Hue (2026-10-28): the ambient colour follows the scene and the lamps
+  flash on every note, through a local relay. See ARCHITECTURE.md.
+
 ## Ideas
+
+- Hue:
+  - an Entertainment API (DTLS streaming) mode for faster, tighter light
+    sync;
+  - spreading notes across several lamps by scale degree;
+  - a launchd agent so the relay starts at login.
 
 - More scales:
   - Turkish makam with 53-TET commas;
