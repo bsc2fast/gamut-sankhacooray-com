@@ -45,8 +45,7 @@ Cloudflare Worker `gamut-sankhacooray` (static assets only):
 CLOUDFLARE_ACCOUNT_ID=9a1da48a0f61e7cebcba39517856d87e npx wrangler deploy
 ```
 
-## Next
+## Docs
 
-MIDI: the audio engine takes MIDI note numbers (fractions for microtones), so
-Web MIDI input can be quantised to the selected scale and/or sent out to a
-synth.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how each module works, the data format, how to add a scale, region or scene, and testing pitfalls
+- [docs/ROADMAP.md](docs/ROADMAP.md): the MIDI plan (input quantised to the scale, output with pitch-bend microtones), other ideas and known limits
