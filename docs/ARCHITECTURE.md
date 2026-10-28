@@ -81,7 +81,8 @@ voice and optionally `drone: true`.
 - `sequence(midis, {step, voice, onStep})` schedules a run and returns
   `{stop()}`. `onStep(i)` drives the wheel highlight and the comet.
 - `startDrone(rootMidi, fifthMidi, style)` / `stopDrone()`. The style is
-  `tanpura` (Hindustani and Carnatic: plucked Pa–Sa–Sa–low Sa cycle) or `pad` (detuned saws through a slowly swept lowpass).- `level()` returns the output loudness, which pulses the scene.
+  `tanpura` (Hindustani and Carnatic: plucked Pa–Sa–Sa–low Sa cycle) or `pad` (detuned saws through a slowly swept lowpass).
+- `level()` returns the output loudness, which pulses the scene.
   `onNote(cb)` is a hook.
 - `VOICES` lists the voice ids and names for the UI. When the voice is set to
   `auto`, the region's default voice is used.
