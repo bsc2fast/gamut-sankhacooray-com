@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gamut · Scales of the world on one wheel</title>
+<meta name="description" content="See and hear the world's musical scales as shapes on a chromatic wheel: maqam, raga, blues, gamelan, Japanese, Ethiopian and more, each in its homeland.">
+<link rel="canonical" href="https://gamut.sankhacooray.com/">
+<meta name="theme-color" content="#0b0a14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Gamut">
+<meta property="og:title" content="Gamut · Scales of the world on one wheel">
+<meta property="og:description" content="See and hear the world's musical scales as shapes on a chromatic wheel: maqam, raga, blues, gamelan, Japanese, Ethiopian and more, each in its homeland.">
+<meta property="og:url" content="https://gamut.sankhacooray.com/">
+<meta property="og:image" content="https://gamut.sankhacooray.com/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Gamut: Maqam Hijaz drawn as a glowing polygon on a brass chromatic wheel over a desert night">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gamut · Scales of the world on one wheel">
+<meta name="twitter:description" content="See and hear the world's musical scales as shapes on a chromatic wheel, each in its homeland.">
+<meta name="twitter:image" content="https://gamut.sankhacooray.com/og.jpg">
+<meta name="twitter:image:alt" content="Gamut: Maqam Hijaz drawn as a glowing polygon on a brass chromatic wheel over a desert night">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  try { const t = localStorage.getItem('sc-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="backdrop" aria-hidden="true">
+  <canvas id="scene"></canvas>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+</div>
+
+<header class="bar float">
+  <a class="brand" href="/" aria-label="Gamut home">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2.4" opacity=".55"/><polygon points="16,4 26.4,10 26.4,22 16,28 9,19 9.6,9.8" fill="var(--acc)" fill-opacity=".25" stroke="var(--acc)" stroke-width="2" stroke-linejoin="round"/></svg>
+    <span>Gamut</span>
+  </a>
+  <span class="tagline">Scales of the world</span>
+  <span class="grow"></span>
+  <button class="icon-btn" id="about-btn" aria-label="About and shortcuts" title="About and shortcuts">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6M12 7.2v.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+  </button>
+  <button class="icon-btn" id="theme-btn" aria-label="Switch theme">
+    <svg class="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="currentColor"/></svg>
+    <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg>
+  </button>
+  <button class="cta" id="play-btn"><span class="cta-icon"></span><span class="cta-label">Hear this scale</span></button>
+</header>
+
+<main class="app">
+  <aside class="pane float left" aria-label="Choose a scale">
+    <div class="pane-head">World</div>
+    <div class="regions" id="regions"></div>
+    <div class="pane-head" id="list-head">Scales</div>
+    <div class="scales" id="scales"></div>
+  </aside>
+
+  <section class="stage">
+    <div class="plate" id="plate">
+      <div class="plate-name" id="plate-name"></div>
+      <div class="plate-sub" id="plate-sub"></div>
+    </div>
+    <div class="origin" id="origin">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.6 7-12.2A7 7 0 0 0 5 9.8C5 15.4 12 22 12 22Z" fill="currentColor" opacity=".9"/><circle cx="12" cy="9.8" r="2.6" fill="var(--bg)"/></svg>
+      <span id="origin-text"></span>
+    </div>
+    <div class="wheel-wrap"><svg id="wheel" role="img" aria-label="Chromatic wheel"></svg></div>
+    <div class="notes" id="notes"></div>
+    <p class="caption" id="caption"></p>
+  </section>
+
+  <aside class="pane float right" aria-label="Sound">
+    <div class="pane-head">Root</div>
+    <div class="roots" id="roots"></div>
+    <div class="pane-head">Voice</div>
+    <div class="seg" id="voices"></div>
+    <div class="pane-head">Run</div>
+    <div class="seg" id="patterns"></div>
+    <div class="row">
+      <label class="tempo"><span>Tempo</span><input type="range" id="tempo" min="60" max="260" value="150"><output id="tempo-out">150</output></label>
+    </div>
+    <div class="row toggles">
+      <button class="chip toggle" id="drone-btn" aria-pressed="false"><span class="dot"></span>Drone</button>
+      <button class="chip toggle" id="edit-btn" aria-pressed="false"><span class="dot"></span>Draw a shape</button>
+    </div>
+    <div class="pane-head" id="match-head">Same shape elsewhere</div>
+    <div class="matches" id="matches"></div>
+  </aside>
+</main>
+
+<div class="overlay" id="about" hidden>
+  <div class="about-card">
+    <h2>Gamut</h2>
+    <p>Every scale is a shape. The wheel holds the twelve notes, with C on top. Lines join the notes the scale uses, and microtones sit between the sockets at their true angle. Every sound is synthesised in your browser.</p>
+    <div class="keys">
+      <span><kbd>Space</kbd>Play or stop</span>
+      <span><kbd>←</kbd><kbd>→</kbd>Scale</span>
+      <span><kbd>↑</kbd><kbd>↓</kbd>Region</span>
+      <span><kbd>A</kbd>…<kbd>L</kbd>Play notes</span>
+      <span><kbd>D</kbd>Drone</span>
+      <span><kbd>Esc</kbd>Close</span>
+    </div>
+    <p class="muted">MIDI controllers are coming. Pick a scale here and your keyboard plays in it.</p>
+    <p class="muted">Made by <a href="https://sankhacooray.com">Sankha Cooray</a></p>
+  </div>
+</div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Gamut: static site on a Cloudflare Worker (assets only).
+# Deploy: CLOUDFLARE_ACCOUNT_ID=9a1da48a0f61e7cebcba39517856d87e npx wrangler deploy
+name = "gamut-sankhacooray"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[assets]
+directory = "./public"
+
+# Auto-provisions the DNS record in the sankhacooray.com zone.
+[[routes]]
+pattern = "gamut.sankhacooray.com"
+custom_domain = true
