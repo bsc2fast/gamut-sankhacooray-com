@@ -101,8 +101,16 @@ button { font: inherit; color: inherit; }
 /* ---- layout ---- */
 .app {
   position: relative; z-index: 1; height: 100%;
-  display: grid; grid-template-columns: 286px minmax(0, 1fr) 286px; grid-template-rows: minmax(0, 1fr); gap: 12px;
-  padding: calc(80px + env(safe-area-inset-top, 0px)) 12px 12px;
+  display: grid; grid-template-columns: 286px minmax(0, 1fr) 286px; grid-template-rows: minmax(0, 1fr) auto; gap: 12px;
+  padding: calc(80px + env(safe-area-inset-top, 0px)) 12px 0;
+}
+/* Shared music apps bar (cdn.sankhacooray.com/js/sankha-apps.js): slim bottom row under all three columns,
+   on a floating surface so the chips read over any landscape in both themes. */
+#scn-apps {
+  grid-column: 1 / -1; justify-self: center; max-width: 100%; min-height: 46px; padding: 5px; border-radius: 23px;
+  margin-bottom: calc(clamp(10px, 1.6vh, 16px) + env(safe-area-inset-bottom, 0px)); color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);
+  backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
 .pane { padding: 14px; display: flex; flex-direction: column; gap: 8px; min-height: 0; max-height: 100%; overflow: hidden; align-self: start; }
 .pane-head { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
@@ -254,6 +262,7 @@ kbd { min-width: 24px; padding: 3px 6px; border-radius: 6px; background: var(--s
 @media (max-width: 900px) {
   .app { height: auto; min-height: 100%; grid-template-columns: 1fr; grid-template-rows: auto; padding-top: calc(78px + env(safe-area-inset-top, 0px)); }
   .stage { order: -1; }
+  #scn-apps { margin-top: 6px; }
   .wheel-wrap { flex: none; }
   .wheel-wrap { width: min(100%, 440px); aspect-ratio: 1; }
   .pane { overflow: visible; }
