@@ -288,6 +288,9 @@ kbd { min-width: 24px; padding: 3px 6px; border-radius: 6px; background: var(--s
 /* ---- play along: MIDI assist page ---- */
 .icon-btn { position: relative; }
 .live-dot { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 8px var(--acc); }
+.assist-on { background: var(--acc-soft); color: var(--acc); box-shadow: inset 0 0 0 1.5px var(--acc); }
+.assist-on:hover { background: hsl(var(--h) 80% 60% / .3); }
+@media (max-width: 420px) { .bar:has(#assist-off:not([hidden])) .brand span { display: none; } }
 .assist-card {
   width: min(1040px, 100%); max-height: 100%; overflow: auto; padding: 22px 24px; border-radius: 18px; display: flex; flex-direction: column; gap: 16px;
   background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);

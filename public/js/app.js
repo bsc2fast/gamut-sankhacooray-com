@@ -408,6 +408,13 @@ function renderAssist() {
     b.onclick = () => { assist.mode = m.id; saveAssist(); assistReset(); };
     modes.appendChild(b);
   });
+  // App bar switch: shown only while an assist mode is on; pressing it returns to Free.
+  const off = $('assist-off'), on = assist.mode !== 'free';
+  off.hidden = !on;
+  if (on) {
+    const l = `Assist on: ${MODES.find(m => m.id === assist.mode).name}. Press to turn it off`;
+    off.title = l; off.setAttribute('aria-label', l);
+  }
   $('fade-stages').innerHTML = FADE_STAGES.map(id => `<span>${MODES.find(m => m.id === id).name}</span>`).join('');
   renderFade();
 
@@ -449,6 +456,7 @@ $('assist-btn').onclick = () => openAssist(true);
 $('assist-close').onclick = () => openAssist(false);
 $('assist').onclick = e => { if (e.target === $('assist')) openAssist(false); };
 $('midi-connect').onclick = () => midi.connect();
+$('assist-off').onclick = () => { assist.mode = 'free'; saveAssist(); assistReset(); };
 $('follow-btn').onclick = () => { assist.follow = !assist.follow; assist.pos = 0; assist.runs = 0; saveAssist(); renderAssist(); };
 
 // ---- theme -----------------------------------------------------------------
