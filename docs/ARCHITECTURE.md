@@ -115,6 +115,8 @@ voice and optionally `drone: true`.
 - `play(i)` lights node i and beats the orb.
 - `cometAt(prog, seq)` moves the comet along the run.
 - `setOrb(text)` sets the text in the centre orb.
+- `setEdit(on)` turns on draw mode: dashed shape, pulsing rings on the empty
+  sockets, and vertex clicks route to `onSlot` so a lit note can be removed.
 - `onNode(i)` fires when a vertex is clicked and plays that degree. `onSlot(pc)`
   fires when a socket is clicked and toggles a note in Draw a shape mode.
 
@@ -194,14 +196,21 @@ Room lights follow the scene and flash with the music.
 
 - **State:** `{scale, root, voice, pattern: up|updown|down, bpm, drone, edit, custom}`.
 - **Panes:**
-  - Left: World (regions) → Scales. Carnatic shows a 6-column grid of the 72
+  - App bar: the title plate (name, subtitle, origin pin) sits centred in the
+    bar; on phones it wraps to a second row.
+  - Left: two tabs, World (regions) and the current region's scales, one shown
+    at a time. Picking a region switches to its scales. Carnatic shows a 6-column grid of the 72
     melakartas (one row per chakra; the chakra name is in each subtitle).
-  - Centre: title plate, origin pin, wheel, note chips, caption.
+  - Centre: wheel, note chips, caption.
   - Right: Root, Voice, Run, Tempo, Drone, Draw a shape, and Same shape
     elsewhere.
 - **Mode chips:** "mode of X on F" moves the root so the sounding pitches stay
   the same. Hijaz on C becomes Harmonic minor on F.
-- **Draw a shape:** clicking sockets toggles notes. The shape is named when it
+- **Play along:** the keyboard button or `M` opens the MIDI assist page. See
+  ASSIST.md. `pressKey(n, vel)` in app.js is the one entry point for MIDI and
+  on-screen keys; it calls `resolve()` from assist.js and plays the result.
+- **Draw a shape:** clicking an empty socket adds a note, clicking a lit
+  vertex removes it (the root stays). The caption shows how while it's on. The shape is named when it
   matches a known scale. The URL becomes `#custom-0.1.4.5.7/D`.
 - **Keys:**
 
@@ -225,7 +234,7 @@ Room lights follow the scene and flash with the music.
 - Theme tokens are defined for light and dark (`data-theme` and
   `prefers-color-scheme`).
 - The body is the scroller, so there's no overscroll bounce.
-- The desktop grid is `286px 1fr 286px` with `grid-template-rows: minmax(0,1fr)`.
+- The desktop grid is `220px 1fr 236px` (`208px 1fr 224px` under 1180px) with `grid-template-rows: minmax(0,1fr)`.
   The wheel SVG is absolutely positioned inside `.wheel-wrap`, so the page
   never scrolls at 1280×720 and up.
 - Below 900px the panes stack.

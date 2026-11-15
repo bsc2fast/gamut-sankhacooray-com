@@ -7,12 +7,9 @@ scales are visual and audible.
 
 The goal is to connect MIDI gear and use Gamut to choose the scale.
 
-1. **Input, quantise to scale.** `navigator.requestMIDIAccess()` reads
-   note-on/off from a keyboard or pad and snaps each note to the nearest degree
-   of the current scale and root, then plays it through `engine.note()`.
-   - Option: map white keys to scale degrees in order, so any scale is playable
-     on the white keys.
-   - Light the matching wheel node with `wheel.play(i)`.
+1. **Input: done (2026-11-15).** A MIDI keyboard plays the scale through five
+   assist modes (Free, Snap, Mute, White keys, Fading guide) with a mapping
+   diagram and Follow the run. See ASSIST.md.
 2. **Output, send to a synth or DAW.** Choose a MIDI output port and send the
    scale run, or quantised input, out.
    - Microtones: send pitch bend per note (±2 semitone range), with one channel
@@ -20,10 +17,8 @@ The goal is to connect MIDI gear and use Gamut to choose the scale.
      SysEx (bulk tuning dump) for synths that support it.
 3. **Control.** MIDI CC or program change selects the scale. A CC knob changes
    the root. Learn mode would be useful.
-4. **UI.** Add a "MIDI" chip group in the right pane: input port, output port,
-   mode (Quantise / White keys / Thru). Show a small activity dot when MIDI is
-   connected. Web MIDI needs Chrome or Edge, and Safari doesn't support it, so
-   hide the group when `requestMIDIAccess` is missing.
+4. **UI.** The Play along page has the input side. It still needs an output
+   port picker.
 
 Hooks already in place:
 - `engine.note(midi, …)` takes float MIDI.

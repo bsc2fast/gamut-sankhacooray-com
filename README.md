@@ -19,8 +19,13 @@ Live: https://gamut.sankhacooray.com
   scrolls.
 - "Same shape elsewhere" links scales with identical notes or modes across
   cultures (Kafi = Dorian = Kharaharapriya).
-- "Draw a shape" lets you tap sockets to build a scale and see what it is called
-  around the world.
+- "Draw a shape" lets you tap sockets to add notes and tap lit notes to remove
+  them, building a scale and seeing what it is called around the world.
+
+- "Play along" connects a MIDI keyboard (Chrome, Edge, Firefox). Keys outside
+  the scale can snap to the nearest scale note, stay silent, or sound as
+  played; white keys can play any scale in order; and a Fading guide withdraws
+  the help as you improve. A piano diagram shows what every key will sound.
 
 ## Layout
 
@@ -30,6 +35,8 @@ public/
   css/app.css         theme tokens (light/dark), floating panes, wheel styles
   js/scales.js        scale data, melakarta generator, cross-culture matching
   js/audio.js         Web Audio engine (MIDI-number API, microtone-safe)
+  js/assist.js        play-along key mapping, assist modes, fading guide
+  js/midi.js          Web MIDI input
   js/wheel.js         SVG chromatic wheel with morphing polygon
   js/scene.js         procedural landscapes, particles, camera drift
   js/app.js           state, UI, keyboard, URL hash (#hijaz/D)
@@ -65,4 +72,5 @@ CLOUDFLARE_ACCOUNT_ID=9a1da48a0f61e7cebcba39517856d87e npx wrangler deploy
 ## Docs
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how each module works, the data format, how to add a scale, region or scene, and testing pitfalls
+- [docs/ASSIST.md](docs/ASSIST.md): the play-along modes, the research behind fading help, and how it differs from existing scale modes
 - [docs/ROADMAP.md](docs/ROADMAP.md): the MIDI plan (input quantised to the scale, output with pitch-bend microtones), other ideas and known limits

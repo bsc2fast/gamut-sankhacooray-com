@@ -53,6 +53,7 @@ export class Wheel {
     this.labels = el('g', {}, svg);
     for (let i = 0; i < 12; i++) {
       const [x, y] = pt(ang(i), R_NODE);
+      el('circle', { cx: x, cy: y, r: 14, class: 'w-slot-ring', 'data-pc': i }, this.sockets);
       const s = el('rect', { x: x - 6, y: y - 6, width: 12, height: 12, rx: 2.5, class: 'w-socket', transform: `rotate(45 ${x} ${y})` }, this.sockets);
       const [lx, ly] = pt(ang(i), R_LABEL);
       const t = el('text', { x: lx, y: ly, class: 'w-label' }, this.labels);
@@ -95,7 +96,7 @@ export class Wheel {
     this.raf = requestAnimationFrame(step);
 
     const on = new Set(pcs.filter(p => Number.isInteger(Math.round(p * 1000) / 1000) && Math.abs(p - Math.round(p)) < 0.01).map(p => Math.round(p) % 12));
-    this.sockets.querySelectorAll('rect').forEach(r => r.classList.toggle('on', on.has(+r.dataset.pc)));
+    this.sockets.querySelectorAll('rect, .w-slot-ring').forEach(r => r.classList.toggle('on', on.has(+r.dataset.pc)));
     this.labels.querySelectorAll('text').forEach(t => {
       const pc = +t.dataset.pc;
       t.classList.toggle('on', on.has(pc));
@@ -118,7 +119,7 @@ export class Wheel {
     this.nodes.innerHTML = '';
     P.forEach(([x, y], i) => {
       el('line', { x1: 0, y1: 0, x2: x, y2: y, class: 'w-spoke' }, this.spokes);
-      const g = el('g', { class: 'w-node' + (i === 0 ? ' root' : ''), 'data-i': i }, this.nodes);
+      const g = el('g', { class: 'w-node' + (i === 0 ? ' root' : '') + (i === this.nextI ? ' next' : ''), 'data-i': i }, this.nodes);
       el('circle', { cx: x, cy: y, r: 16, class: 'w-node-hit' }, g);
       el('circle', { cx: x, cy: y, r: i === 0 ? 9 : 7, class: 'w-node-dot', filter: 'url(#wg-glow)' }, g);
       el('circle', { cx: x, cy: y, r: 2.6, class: 'w-node-core' }, g);
@@ -127,7 +128,13 @@ export class Wheel {
         const [mx, my] = pt(this.angles[i], R_NODE - 24);
         const t = el('text', { x: mx, y: my, class: 'w-micro' }, g); t.textContent = lab.short;
       }
-      g.addEventListener('click', e => { e.stopPropagation(); this.onNode(i); });
+      g.addEventListener('click', e => {
+        e.stopPropagation();
+        // Drawing: a tap on a scale note removes it, like tapping an empty socket adds one.
+        const pc = this.pcs?.[i];
+        if (this.editing && i > 0 && Math.abs(pc - Math.round(pc)) < 0.01) this.onSlot(Math.round(pc) % 12);
+        else this.onNode(i);
+      });
     });
   }
 
@@ -151,5 +158,21 @@ export class Wheel {
     this.comet.classList.add('on');
   }
 
+  // Follow the run: rings the node to play next (null clears it).
+  next(i) {
+    this.nextI = i;
+    this.nodes.querySelectorAll('.w-node').forEach(n => n.classList.toggle('next', +n.dataset.i === i));
+  }
+
+  // Flashes a socket for a key played outside the scale.
+  miss(pc) {
+    const r = this.sockets.querySelector(`rect[data-pc="${pc}"]`);
+    if (!r) return;
+    r.classList.add('miss');
+    setTimeout(() => r.classList.remove('miss'), 260);
+  }
+
   setOrb(text) { this.orbText.textContent = text; }
+
+  setEdit(on) { this.editing = on; this.svg.classList.toggle('editing', on); }
 }

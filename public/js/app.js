@@ -3,12 +3,15 @@ import { Engine, VOICES } from './audio.js';
 import { Wheel } from './wheel.js';
 import { Scene, lampColours } from './scene.js';
 import { Hue } from './hue.js';
+import { Midi } from './midi.js';
+import { MODES, FADE_STAGES, keyMap, resolve, Fader } from './assist.js';
 
 const $ = id => document.getElementById(id);
 const URL_NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Fs', 'G', 'Ab', 'A', 'Bb', 'B'];
 const INT = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
 const PATTERNS = [{ id: 'up', name: 'Up' }, { id: 'updown', name: 'Up & down' }, { id: 'down', name: 'Down' }];
 const KEYS = 'asdfghjkl;\'';
+const DRAW_HINT = 'Tap an empty socket to add a note, a lit one to remove it.';
 
 const engine = new Engine();
 const scene = new Scene($('scene'));
@@ -56,9 +59,19 @@ function renderRegions() {
     b.className = 'region' + (r.id === region().id ? ' on' : '');
     b.style.setProperty('--rh', r.hue);
     b.innerHTML = `<span class="sw"></span>${r.name}`;
-    b.onclick = () => pickRegion(r.id);
+    b.onclick = () => { leftTab = 'scales'; pickRegion(r.id); };
     $('regions').appendChild(b);
   });
+}
+
+// Left pane shows one tab at a time: the world's regions or the current region's scales.
+let leftTab = 'scales';
+function renderLeftTab() {
+  const w = leftTab === 'world';
+  $('tab-world').classList.toggle('on', w); $('tab-world').setAttribute('aria-selected', w);
+  $('tab-scales').classList.toggle('on', !w); $('tab-scales').setAttribute('aria-selected', !w);
+  $('tab-scales').style.setProperty('--rh', region().hue);
+  $('regions').hidden = !w; $('scales').hidden = w;
 }
 
 // Sub-tab shown in the list for regions with groups; follows the picked scale.
@@ -121,9 +134,9 @@ function renderStage() {
   document.documentElement.style.setProperty('--h', r.hue);
   $('plate-name').textContent = s.name;
   $('plate-sub').textContent = s.sub || r.tag;
-  $('origin-text').textContent = s.o || 'Drawn by you';
+  $('origin-text').textContent = s.o || '';
   const cap = $('caption');
-  cap.textContent = s.d || '';
+  cap.textContent = state.edit ? DRAW_HINT : s.d || '';
   [cap, $('plate'), $('origin')].forEach(e => { e.classList.remove('fade-in'); void e.offsetWidth; e.classList.add('fade-in'); });
 
   const pcs = s.steps.map(x => (state.root + x) % 12);
@@ -212,6 +225,7 @@ function renderControls() {
   seg('patterns', PATTERNS, 'pattern', restartIfPlaying);
   $('drone-btn').setAttribute('aria-pressed', state.drone);
   $('edit-btn').setAttribute('aria-pressed', state.edit);
+  wheel.setEdit(state.edit);
 }
 
 function renderHue() {
@@ -222,7 +236,8 @@ function renderHue() {
 }
 
 function update(push = true) {
-  renderRegions(); renderList(); renderStage(); renderControls();
+  renderRegions(); renderList(); renderLeftTab(); renderStage(); renderControls();
+  assistReset();
   if (state.drone) startDrone();
   if (push) {
     const id = state.custom ? 'custom-' + state.custom.steps.join('.') : state.scale.id;
@@ -247,7 +262,7 @@ function toggleCustom(rel) {
   const base = steps().filter(x => Number.isInteger(x));
   const has = base.includes(rel);
   const next = (has ? base.filter(x => x !== rel) : [...base, rel]).sort((a, b) => a - b);
-  state.custom = { id: 'custom', name: 'Your shape', sub: 'Drawn on the wheel', region: state.scale.region, steps: next, o: '', d: 'Tap sockets to add or remove notes. Matching scales from around the world appear on the right.' };
+  state.custom = { id: 'custom', name: 'Your shape', sub: 'Drawn on the wheel', region: state.scale.region, steps: next, o: '', d: '' };
   const named = matches(next, null).same[0];
   if (named) { state.custom.name = named.name; state.custom.o = named.o; state.custom.sub = `= ${named.sub || regionOf(named.region).tag}`; }
   update();
@@ -307,6 +322,135 @@ function startDrone() {
   engine.startDrone(rootMidi(), fifth, region().drone ? 'tanpura' : 'pad');
 }
 
+// ---- play along: MIDI keyboard + assist modes (logic in assist.js) ----------
+const MODE_ICONS = {
+  free: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  snap: '<path d="M6 4v8a6 6 0 0 0 12 0V4h-4v8a2 2 0 0 1-4 0V4Z"/><path d="M6 8h4M14 8h4"/>',
+  mute: '<path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="m17 9.5 4 5m0-5-4 5"/>',
+  white: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v14M15 5v14"/>',
+  fade: '<path d="M3 7h5v4h5v4h5v4h3"/>',
+};
+const KB_LO = 48, KB_HI = innerWidth < 600 ? 71 : 83; // C3 to B5 on the mapping keyboard (two octaves on phones)
+const assist = { mode: 'snap', follow: false, pos: 0, runs: 0 };
+try { Object.assign(assist, JSON.parse(localStorage.getItem('gamut-assist') || '{}')); assist.pos = 0; assist.runs = 0; } catch (e) {}
+if (!MODES.some(m => m.id === assist.mode)) assist.mode = 'snap';
+const fader = new Fader();
+let kmap = null;
+const midi = new Midi((n, vel) => pressKey(n, vel), renderMidi);
+
+const activeMode = () => assist.mode === 'fade' ? fader.mode : assist.mode;
+const saveAssist = () => { try { localStorage.setItem('gamut-assist', JSON.stringify({ mode: assist.mode, follow: assist.follow })); } catch (e) {} };
+
+// The scale, root or mode changed: rebuild the key map and start the guide over.
+function assistReset() {
+  kmap = keyMap(steps());
+  fader.reset(); assist.pos = 0; assist.runs = 0;
+  renderAssist();
+}
+
+function followTarget() { const seq = sequence(); return seq[assist.pos % seq.length][1]; }
+
+// One key press, from MIDI or the on-screen keyboard.
+function pressKey(n, vel = 0.8) {
+  const r = resolve(activeMode(), n, state.root, rootMidi(), steps(), kmap);
+  if (r.midi !== null) {
+    engine.note(r.midi, null, 0.5, voice(), null, 0.35 + 0.65 * vel);
+    scene.pulse(0.5); hue.pulse(r.deg === null ? 0 : r.deg / steps().length, 0.8);
+  }
+  if (r.deg !== null) {
+    wheel.play(r.deg); flashNote(r.deg);
+    clearTimeout(pressKey.t);
+    pressKey.t = setTimeout(() => { if (!playing) { wheel.play(null); flashNote(-1); } }, 280);
+  }
+  if (!r.ok) wheel.miss(((n % 12) + 12) % 12);
+  const key = $('kb').querySelector(`[data-n="${n}"]`);
+  if (key) { const c = r.ok ? 'hit' : 'miss'; key.classList.add(c); setTimeout(() => key.classList.remove(c), 220); }
+
+  let redraw = false;
+  if (assist.mode === 'fade' && fader.push(r.ok)) redraw = true;
+  if (assist.follow && r.ok && r.deg === followTarget()) {
+    assist.pos++;
+    if (assist.pos % sequence().length === 0) assist.runs++;
+    redraw = true;
+  }
+  redraw ? renderAssist() : renderFade();
+}
+
+function renderMidi() {
+  const b = $('midi-connect'), on = midi.connected;
+  b.setAttribute('aria-pressed', on);
+  $('midi-label').textContent = on ? midi.names.join(', ')
+    : !midi.supported ? 'MIDI needs Chrome, Edge or Firefox'
+    : midi.denied ? 'MIDI access was blocked'
+    : midi.access ? 'No keyboard found' : 'Connect keyboard';
+  b.disabled = !midi.supported;
+  $('assist-btn').querySelector('.live-dot').hidden = !on;
+}
+
+function renderFade() {
+  const show = assist.mode === 'fade';
+  $('fade-meter').hidden = !show;
+  if (!show) return;
+  [...$('fade-stages').children].forEach((e, i) => e.classList.toggle('on', i === fader.stage));
+  $('fade-fill').style.width = `${fader.stage === 2 ? 100 : Math.round(fader.progress / Fader.UP * 100)}%`;
+}
+
+function renderAssist() {
+  if (!kmap) return;
+  $('assist-scale').textContent = `${current().name} in ${NOTE_NAMES[state.root]}`;
+  const modes = $('modes');
+  modes.innerHTML = '';
+  MODES.forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'mode' + (m.id === assist.mode ? ' on' : '');
+    b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', m.id === assist.mode);
+    b.innerHTML = `<span class="mode-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${MODE_ICONS[m.id]}</svg><b>${m.name}</b></span><span class="mode-text">${m.text}</span>`;
+    b.onclick = () => { assist.mode = m.id; saveAssist(); assistReset(); };
+    modes.appendChild(b);
+  });
+  $('fade-stages').innerHTML = FADE_STAGES.map(id => `<span>${MODES.find(m => m.id === id).name}</span>`).join('');
+  renderFade();
+
+  // The mapping keyboard: each key is labelled with the note it will sound.
+  const mode = activeMode(), s = steps(), target = assist.follow ? followTarget() : null;
+  const kb = $('kb');
+  kb.innerHTML = '';
+  let whites = 0;
+  const total = Array.from({ length: KB_HI - KB_LO + 1 }, (_, i) => KB_LO + i).filter(n => ![1, 3, 6, 8, 10].includes(n % 12)).length;
+  for (let n = KB_LO; n <= KB_HI; n++) {
+    const black = [1, 3, 6, 8, 10].includes(n % 12);
+    const r = resolve(mode, n, state.root, rootMidi(), s, kmap);
+    const b = document.createElement('button');
+    b.dataset.n = n;
+    let cls = 'k ' + (black ? 'kb-b' : 'kb-w'), text = '';
+    if (r.midi === null) cls += ' off';
+    else if (r.ok) { cls += ' in' + (r.deg === 0 ? ' root' : '') + (r.deg === target ? ' next' : ''); text = label(s[r.deg]).note; }
+    else if (r.snapped) { cls += ' snap'; text = `${r.midi < n ? '‹' : '›'}${label(s[r.deg]).note}`; }
+    else cls += ' stray';
+    b.className = cls;
+    if (text) b.innerHTML = `<span>${text}</span>`;
+    b.setAttribute('aria-label', r.midi === null ? 'Silent key' : `Plays ${text.replace(/[‹›]/, '') || 'as played'}`);
+    if (black) b.style.left = `${whites / total * 100}%`; else whites++;
+    b.onpointerdown = e => { e.preventDefault(); pressKey(n); };
+    kb.appendChild(b);
+  }
+  kb.style.setProperty('--whites', total);
+
+  $('follow-btn').setAttribute('aria-pressed', assist.follow);
+  wheel.next(target);
+  const hint = $('assist-hint');
+  if (assist.follow) hint.textContent = `Next: ${label(s[target]).note}${assist.runs ? ` · run ${assist.runs + 1}` : ''}`;
+  else if (assist.mode === 'fade') hint.textContent = fader.stage === 2 ? 'No help now. It returns if you slip.' : 'Stay in the scale and the help steps back.';
+  else hint.textContent = midi.connected ? '' : 'No keyboard? Tap these keys.';
+}
+
+function openAssist(open) { $('assist').hidden = !open; if (open) renderAssist(); }
+$('assist-btn').onclick = () => openAssist(true);
+$('assist-close').onclick = () => openAssist(false);
+$('assist').onclick = e => { if (e.target === $('assist')) openAssist(false); };
+$('midi-connect').onclick = () => midi.connect();
+$('follow-btn').onclick = () => { assist.follow = !assist.follow; assist.pos = 0; assist.runs = 0; saveAssist(); renderAssist(); };
+
 // ---- theme -----------------------------------------------------------------
 function isLight() {
   const t = document.documentElement.dataset.theme;
@@ -327,6 +471,8 @@ matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { t
 
 // ---- wiring ----------------------------------------------------------------
 $('play-btn').onclick = play;
+$('tab-world').onclick = () => { leftTab = 'world'; renderLeftTab(); };
+$('tab-scales').onclick = () => { leftTab = 'scales'; renderLeftTab(); };
 $('tempo').oninput = e => { state.bpm = +e.target.value; $('tempo-out').textContent = state.bpm; };
 $('tempo').onchange = restartIfPlaying;
 $('drone-btn').onclick = () => {
@@ -334,7 +480,7 @@ $('drone-btn').onclick = () => {
   state.drone ? startDrone() : engine.stopDrone();
   renderControls();
 };
-$('edit-btn').onclick = () => { state.edit = !state.edit; renderControls(); };
+$('edit-btn').onclick = () => { state.edit = !state.edit; update(false); };
 $('hue-btn').onclick = () => hue.set(!hue.on);
 $('about-btn').onclick = () => { $('about').hidden = false; };
 $('about').onclick = () => { $('about').hidden = true; };
@@ -344,7 +490,8 @@ addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey || e.target.tagName === 'INPUT') return;
   if (e.key === 'H') { hue.lights.length ? hue.set(!hue.on) : hue.connect(); return; }
   const k = e.key.toLowerCase();
-  if (k === 'escape') { $('about').hidden = true; return; }
+  if (k === 'escape') { $('about').hidden = true; openAssist(false); return; }
+  if (k === 'm') { openAssist($('assist').hidden); return; }
   if (k === ' ') { e.preventDefault(); play(); return; }
   if (k === 'arrowright' || k === 'arrowleft') {
     e.preventDefault();
@@ -386,4 +533,5 @@ function fromHash() {
 }
 fromHash();
 themeLabel();
+renderMidi();
 update(false);

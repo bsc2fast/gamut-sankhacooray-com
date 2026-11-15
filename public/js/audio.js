@@ -74,8 +74,9 @@ export class Engine {
     return { buf, rate: f / (sr / (N + 0.5)) };
   }
 
-  note(midi, t, dur, voice, dest = this.out, vel = 1) {
+  note(midi, t, dur, voice, dest, vel = 1) {
     const ctx = this.ensure();
+    dest ||= this.out; // read after ensure(): the first tap can come before the graph exists
     t = Math.max(t ?? ctx.currentTime, ctx.currentTime);
     const f = hz(midi);
     const env = ctx.createGain();
