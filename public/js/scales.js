@@ -1,6 +1,9 @@
 // Scale library. Steps are semitones above the root; fractions are microtones
 // (1.5 = 150 cents). `o` is where the scale comes from, `scene` overrides the
-// region's landscape for scales rooted somewhere specific.
+// region's landscape for scales rooted somewhere specific. A region with
+// `groups` shows its list behind sub-tabs; each of its scales names its group
+// in `g`. Ragas are their full note set (aroha ∪ avaroha), so a raga that only
+// differs from its thaat by movement shares the thaat's shape.
 
 export const NOTE_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
 
@@ -8,10 +11,13 @@ export const REGIONS = [
   { id: 'western',   name: 'Western',        tag: 'European mode',  hue: 265, scene: 'alps',      voice: 'keys' },
   { id: 'blues',     name: 'Blues',          tag: 'Blues',          hue: 222, scene: 'bayou',     voice: 'reed' },
   { id: 'jazz',      name: 'Jazz',           tag: 'Jazz',           hue: 196, scene: 'rain',      voice: 'keys' },
-  { id: 'arabic',    name: 'Arabic & Persian', tag: 'Maqam',        hue: 172, scene: 'desert',    voice: 'pluck' },
+  { id: 'arabic',    name: 'Arabic & Persian', tag: 'Maqam',        hue: 172, scene: 'desert',    voice: 'pluck',
+    groups: [{ id: 'maqam-q', name: 'Quarter-tone' }, { id: 'maqam', name: '12-tone' }, { id: 'persian', name: 'Dastgah · Makam' }] },
   { id: 'europe',    name: 'Folk Europe',    tag: 'Folk',           hue: 340, scene: 'steppe',    voice: 'reed' },
-  { id: 'hindustani', name: 'Hindustani',    tag: 'Raga · North India', hue: 26, scene: 'ganges', voice: 'reed', drone: true },
-  { id: 'carnatic',  name: 'Carnatic',       tag: 'Melakarta · South India', hue: 100, scene: 'palms', voice: 'pluck', drone: true },
+  { id: 'hindustani', name: 'Hindustani',    tag: 'Raga · North India', hue: 26, scene: 'ganges', voice: 'reed', drone: true,
+    groups: [{ id: 'thaat', name: 'Thaats' }, { id: 'morning', name: 'Morning' }, { id: 'afternoon', name: 'Afternoon' }, { id: 'evening', name: 'Evening' }, { id: 'night', name: 'Night' }] },
+  { id: 'carnatic',  name: 'Carnatic',       tag: 'Melakarta · South India', hue: 100, scene: 'palms', voice: 'pluck', drone: true,
+    groups: [{ id: 'mela', name: 'Melakartas' }, { id: 'janya', name: 'Janya ragas' }] },
   { id: 'china',     name: 'China & Korea',  tag: 'Pentatonic',     hue: 6,   scene: 'karst',     voice: 'pluck' },
   { id: 'japan',     name: 'Japan',          tag: 'Japanese',       hue: 318, scene: 'sakura',    voice: 'koto' },
   { id: 'seasia',    name: 'Southeast Asia', tag: 'Gamelan',        hue: 44,  scene: 'volcano',   voice: 'bell' },
@@ -58,19 +64,30 @@ const RAW = [
   ['jazz', 'augmented', 'Augmented', [0, 3, 4, 7, 8, 11], { o: 'Jazz · Coltrane', d: 'Two augmented triads interlocked.' }],
 
   // Arabic & Persian
-  ['arabic', 'rast', 'Maqam Rast', [0, 2, 3.5, 5, 7, 9, 10.5], { sub: 'Arabic · quarter-tone', o: 'Arab world · Turkey', d: 'The "head" maqam. Its 3rd and 7th sit a quarter tone flat, between major and minor.' }],
-  ['arabic', 'bayati', 'Maqam Bayati', [0, 1.5, 3, 5, 7, 8, 10], { sub: 'Arabic · quarter-tone', o: 'Iraq · Egypt · Levant', d: 'The most common maqam in Arabic song, with a three-quarter-tone 2nd.' }],
-  ['arabic', 'saba', 'Maqam Saba', [0, 1.5, 3, 4, 7, 8, 10], { sub: 'Arabic · quarter-tone', o: 'Levant · Iraq', d: 'Saba sounds like weeping. A flat 4th makes it ache.' }],
-  ['arabic', 'sikah', 'Maqam Sikah', [0, 1.5, 3.5, 5.5, 7, 8.5, 10.5], { sub: 'Arabic · quarter-tone', o: 'Egypt · Arab world', d: 'Sikah starts on a half-flat note, so the whole scale floats between the keys.' }],
-  ['arabic', 'hijaz', 'Maqam Hijaz', [0, 1, 4, 5, 7, 8, 10], { sub: 'Arabic ≈ 12-tone', o: 'Hejaz, Arabian Peninsula', scene: 'desert', d: 'Named after the Hejaz region. The wide 1½-step gap from ♭2 to 3 is its signature.' }],
-  ['arabic', 'hijaz-kar', 'Maqam Hijaz Kar', [0, 1, 4, 5, 7, 8, 11], { sub: 'Arabic ≈ 12-tone', o: 'Egypt · Turkey', d: 'Two Hijaz tetrachords stacked. Also called Double harmonic.' }],
-  ['arabic', 'nahawand', 'Maqam Nahawand', [0, 2, 3, 5, 7, 8, 11], { sub: 'Arabic ≈ 12-tone', o: 'Nahavand, Iran', d: 'Named after the Persian town. Close to harmonic minor.' }],
-  ['arabic', 'kurd', 'Maqam Kurd', [0, 1, 3, 5, 7, 8, 10], { sub: 'Arabic ≈ 12-tone', o: 'Kurdistan', d: 'Named after the Kurds. The same notes as Western Phrygian.' }],
-  ['arabic', 'ajam', 'Maqam Ajam', [0, 2, 4, 5, 7, 9, 11], { sub: 'Arabic ≈ 12-tone', o: 'Persia ("Ajam")', d: 'Ajam is the Arabic word for "Persian". It matches the Western major scale.' }],
-  ['arabic', 'nikriz', 'Maqam Nikriz', [0, 2, 3, 6, 7, 9, 10], { sub: 'Arabic ≈ 12-tone', o: 'Levant · Turkey', d: 'Minor with a raised 4th.' }],
-  ['arabic', 'persian', 'Persian', [0, 1, 4, 5, 6, 8, 11], { o: 'Iran', d: 'A 12-tone stand-in for Persian colour, with a ♭5 and a major 7th.' }],
-  ['arabic', 'shur', 'Dastgah Shur', [0, 1.5, 3, 5, 7, 8, 10], { sub: 'Persian · koron', o: 'Iran', d: 'The mother of Persian dastgahs. Its 2nd is lowered by a koron, about a quarter tone.' }],
-  ['arabic', 'homayoun', 'Dastgah Homayoun', [0, 1.5, 4, 5, 7, 8, 10], { sub: 'Persian · koron', o: 'Iran', d: 'Regal and grave, with a koron 2nd and a major 3rd.' }],
+  ['arabic', 'rast', 'Maqam Rast', [0, 2, 3.5, 5, 7, 9, 10.5], { g: 'maqam-q', sub: 'Arabic · quarter-tone', o: 'Arab world · Turkey', d: 'The "head" maqam. Its 3rd and 7th sit a quarter tone flat, between major and minor.' }],
+  ['arabic', 'bayati', 'Maqam Bayati', [0, 1.5, 3, 5, 7, 8, 10], { g: 'maqam-q', sub: 'Arabic · quarter-tone', o: 'Iraq · Egypt · Levant', d: 'The most common maqam in Arabic song, with a three-quarter-tone 2nd. The Turkish Uşşak.' }],
+  ['arabic', 'husayni', 'Maqam Husayni', [0, 1.5, 3, 5, 7, 8.5, 10], { g: 'maqam-q', sub: 'Arabic · quarter-tone', o: 'Iraq · Turkey (Hüseyni)', d: 'Bayati with the 6th half-flat as well. The Turkish Hüseyni.' }],
+  ['arabic', 'saba', 'Maqam Saba', [0, 1.5, 3, 4, 7, 8, 10], { g: 'maqam-q', sub: 'Arabic · quarter-tone', o: 'Levant · Iraq', d: 'Saba sounds like weeping. A flat 4th makes it ache.' }],
+  ['arabic', 'sikah', 'Maqam Sikah', [0, 1.5, 3.5, 5.5, 7, 8.5, 10.5], { g: 'maqam-q', sub: 'Arabic · quarter-tone', o: 'Egypt · Arab world', d: 'Sikah starts on a half-flat note, so the whole scale floats between the keys.' }],
+  ['arabic', 'huzam', 'Maqam Huzam', [0, 1.5, 3.5, 4.5, 7.5, 8.5, 10.5], { g: 'maqam-q', sub: 'Arabic · quarter-tone', o: 'Egypt · Turkey (Hüzzam)', d: 'Sikah below, Hijaz above, all from a half-flat note. The Turkish Hüzzam.' }],
+  ['arabic', 'jiharkah', 'Maqam Jiharkah', [0, 2, 4, 5, 7, 9, 10.5], { g: 'maqam-q', sub: 'Arabic · quarter-tone', o: 'Egypt', d: 'Major with the 7th a quarter tone flat. From the Persian chahargah, "fourth place".' }],
+  ['arabic', 'suznak', 'Maqam Suznak', [0, 2, 3.5, 5, 7, 8, 11], { g: 'maqam-q', sub: 'Arabic · quarter-tone', o: 'Egypt · Turkey', d: 'Rast below, Hijaz above. Persian suz-nak, "burning".' }],
+  ['arabic', 'hijaz', 'Maqam Hijaz', [0, 1, 4, 5, 7, 8, 10], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Hejaz, Arabian Peninsula', scene: 'desert', d: 'Named after the Hejaz region. The wide 1½-step gap from ♭2 to 3 is its signature.' }],
+  ['arabic', 'hijaz-kar', 'Maqam Hijaz Kar', [0, 1, 4, 5, 7, 8, 11], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Egypt · Turkey', d: 'Two Hijaz tetrachords stacked. Also called Double harmonic.' }],
+  ['arabic', 'nahawand', 'Maqam Nahawand', [0, 2, 3, 5, 7, 8, 11], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Nahavand, Iran', d: 'Named after the Persian town. Close to harmonic minor.' }],
+  ['arabic', 'kurd', 'Maqam Kurd', [0, 1, 3, 5, 7, 8, 10], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Kurdistan', d: 'Named after the Kurds. The same notes as Western Phrygian.' }],
+  ['arabic', 'lami', 'Maqam Lami', [0, 1, 3, 5, 6, 8, 10], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Iraq', d: 'A rare Iraqi maqam built on a diminished 5th. The notes of Locrian.' }],
+  ['arabic', 'ajam', 'Maqam Ajam', [0, 2, 4, 5, 7, 9, 11], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Persia ("Ajam")', d: 'Ajam is the Arabic word for "Persian". It matches the Western major scale.' }],
+  ['arabic', 'shawq-afza', 'Maqam Shawq Afza', [0, 2, 4, 5, 7, 8, 11], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Egypt', d: 'Ajam below, Hijaz above. Harmonic major shares the notes.' }],
+  ['arabic', 'nikriz', 'Maqam Nikriz', [0, 2, 3, 6, 7, 9, 10], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Levant · Turkey', d: 'Minor with a raised 4th.' }],
+  ['arabic', 'nawa-athar', 'Maqam Nawa Athar', [0, 2, 3, 6, 7, 8, 11], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Egypt · Levant', d: 'Nikriz below, Hijaz above: two augmented 2nds. Hungarian minor shares the notes.' }],
+  ['arabic', 'athar-kurd', 'Maqam Athar Kurd', [0, 1, 3, 6, 7, 8, 11], { g: 'maqam', sub: 'Arabic ≈ 12-tone', o: 'Egypt', d: 'Nawa Athar with a ♭2. The notes of the Hindustani Todi thaat.' }],
+  ['arabic', 'persian', 'Persian', [0, 1, 4, 5, 6, 8, 11], { g: 'persian', o: 'Iran', d: 'A 12-tone stand-in for Persian colour, with a ♭5 and a major 7th.' }],
+  ['arabic', 'shur', 'Dastgah Shur', [0, 1.5, 3, 5, 7, 8, 10], { g: 'persian', sub: 'Persian · koron', o: 'Iran', d: 'The mother of Persian dastgahs. Its 2nd is lowered by a koron, about a quarter tone.' }],
+  ['arabic', 'homayoun', 'Dastgah Homayoun', [0, 1.5, 4, 5, 7, 8, 10], { g: 'persian', sub: 'Persian · koron', o: 'Iran', d: 'Regal and grave, with a koron 2nd and a major 3rd.' }],
+  ['arabic', 'chahargah', 'Dastgah Chahargah', [0, 1.5, 4, 5, 7, 8.5, 11], { g: 'persian', sub: 'Persian · koron', o: 'Iran', d: 'Heroic and festive. Koron 2nd and 6th around a major 3rd and 7th, a cousin of Hijaz Kar.' }],
+  ['arabic', 'esfahan', 'Bayat-e Esfahan', [0, 2, 3, 5, 7, 8.5, 11], { g: 'persian', sub: 'Persian · koron', o: 'Isfahan, Iran', d: 'Harmonic minor with the 6th raised by a koron. Named after the city.' }],
+  ['arabic', 'karcigar', 'Makam Karcığar', [0, 1.5, 3, 5, 6, 9, 10], { g: 'persian', sub: 'Turkish · ≈ comma', o: 'Turkey', d: 'Uşşak below, Hicaz above. A favourite of Turkish folk and Romani bands.' }],
 
   // Folk Europe
   ['europe', 'freygish', 'Freygish', [0, 1, 4, 5, 7, 8, 10], { sub: 'Ahava Rabbah', o: 'Ashkenazi Jewish · Eastern Europe', d: 'The klezmer scale, from the prayer mode Ahava Rabbah.' }],
@@ -83,24 +100,69 @@ const RAW = [
   ['europe', 'neapolitan-major', 'Neapolitan major', [0, 1, 3, 5, 7, 9, 11], { o: 'Naples, Italy', d: 'Melodic minor with a ♭2.' }],
   ['europe', 'spanish-8', 'Spanish 8-tone', [0, 1, 3, 4, 5, 6, 8, 10], { o: 'Spain', d: 'Phrygian with both minor and major 3rd, the way flamenco guitarists play it.' }],
   ['europe', 'enigmatic', 'Enigmatic', [0, 1, 4, 6, 8, 10, 11], { o: 'Italy · Verdi', d: 'Verdi\'s puzzle scale, from a newspaper riddle of 1888.' }],
+  ['europe', 'pireotikos', 'Pireotikos', [0, 1, 4, 6, 7, 8, 11], { sub: 'Greek dromos', o: 'Piraeus, Greece', d: 'The rebetiko road from the port of Piraeus: Hijaz with a ♯4. The notes of the Poorvi thaat.' }],
+  ['europe', 'houzam', 'Houzam', [0, 3, 4, 5, 7, 8, 11], { sub: 'Greek dromos', o: 'Greece', d: 'A rebetiko road with both 3rds and an augmented 2nd on top, after the Turkish Hüzzam.' }],
+  ['europe', 'romanian-major', 'Romanian major', [0, 1, 4, 6, 7, 9, 10], { o: 'Romania', d: '♭2 with ♯4 and ♭7. A mode of Hungarian major, heard in lăutari fiddling.' }],
+  ['europe', 'gaelic-major', 'Gaelic hexatonic', [0, 2, 4, 5, 7, 9], { sub: 'Major without the 7th', o: 'Ireland · Scotland', d: 'Six-note major with no 7th, so tunes drift between major and Mixolydian.' }],
+  ['europe', 'gaelic-minor', 'Gaelic hexatonic minor', [0, 2, 3, 5, 7, 10], { sub: 'Minor without the 6th', o: 'Ireland · Scotland', d: 'Minor with no 6th, between Dorian and Aeolian. Common in Gaelic song and pipe tunes.' }],
 
-  // Hindustani: ten thaats plus well-loved pentatonic ragas
-  ['hindustani', 'bilawal', 'Bilawal', [0, 2, 4, 5, 7, 9, 11], { sub: 'Thaat', o: 'North India', d: 'All natural swaras. The morning thaat, equal to the major scale.' }],
-  ['hindustani', 'khamaj', 'Khamaj', [0, 2, 4, 5, 7, 9, 10], { sub: 'Thaat', o: 'North India', d: 'Komal Ni. Light and romantic, often used for thumri.' }],
-  ['hindustani', 'kafi', 'Kafi', [0, 2, 3, 5, 7, 9, 10], { sub: 'Thaat', o: 'North India', d: 'Komal Ga and Ni. Folk-like, sung at Holi.' }],
-  ['hindustani', 'asavari', 'Asavari', [0, 2, 3, 5, 7, 8, 10], { sub: 'Thaat', o: 'North India', d: 'Komal Ga, Dha and Ni. Serious late-morning mood.' }],
-  ['hindustani', 'bhairavi', 'Bhairavi', [0, 1, 3, 5, 7, 8, 10], { sub: 'Thaat', o: 'North India', d: 'All komal swaras. Concerts traditionally close in Bhairavi.' }],
-  ['hindustani', 'bhairav', 'Bhairav', [0, 1, 4, 5, 7, 8, 11], { sub: 'Thaat', o: 'North India', d: 'Komal Re and Dha. A dawn raga of devotion.' }],
-  ['hindustani', 'kalyan', 'Kalyan', [0, 2, 4, 6, 7, 9, 11], { sub: 'Thaat · Yaman', o: 'North India', d: 'Tivra Ma. Raga Yaman, an evening favourite.' }],
-  ['hindustani', 'marwa', 'Marwa', [0, 1, 4, 6, 7, 9, 11], { sub: 'Thaat', o: 'Marwar, Rajasthan', d: 'Komal Re and tivra Ma. Restless and sung at sunset.' }],
-  ['hindustani', 'poorvi', 'Poorvi', [0, 1, 4, 6, 7, 8, 11], { sub: 'Thaat', o: 'Eastern India', d: '"Eastern". Komal Re and Dha with tivra Ma, for dusk.' }],
-  ['hindustani', 'todi', 'Todi', [0, 1, 3, 6, 7, 8, 11], { sub: 'Thaat', o: 'North India', d: 'Komal Re, Ga and Dha with tivra Ma. Intense morning raga.' }],
-  ['hindustani', 'bhupali', 'Bhupali', [0, 2, 4, 7, 9], { sub: 'Raga · Mohanam', o: 'India', d: 'Pentatonic evening raga. Called Mohanam in the south.' }],
-  ['hindustani', 'malkauns', 'Malkauns', [0, 3, 5, 8, 10], { sub: 'Raga · Hindolam', o: 'India', d: 'A midnight raga, deep and meditative. Called Hindolam in the south.' }],
-  ['hindustani', 'durga', 'Durga', [0, 2, 5, 7, 9], { sub: 'Raga', o: 'India', d: 'Pentatonic without Ga and Ni. Bright and devotional.' }],
-  ['hindustani', 'shivaranjani', 'Shivaranjani', [0, 2, 3, 7, 9], { sub: 'Raga', o: 'India', d: 'Pentatonic with komal Ga. Plaintive, much loved in film songs.' }],
-  ['hindustani', 'megh', 'Megh', [0, 2, 5, 7, 10], { sub: 'Raga · Madhyamavati', o: 'India', d: 'The monsoon raga, said to summon rain clouds.' }],
-  ['hindustani', 'hamsadhwani', 'Hamsadhwani', [0, 2, 4, 7, 11], { sub: 'Raga', o: 'South India', scene: 'palms', d: '"Cry of the swan". Carnatic in origin, now sung in both traditions.' }],
+  // Hindustani: the ten thaats, then ragas by their time of day (samay)
+  ['hindustani', 'bilawal', 'Bilawal', [0, 2, 4, 5, 7, 9, 11], { g: 'thaat', sub: 'Thaat', o: 'North India', d: 'All natural swaras. The morning thaat, equal to the major scale.' }],
+  ['hindustani', 'khamaj', 'Khamaj', [0, 2, 4, 5, 7, 9, 10], { g: 'thaat', sub: 'Thaat', o: 'North India', d: 'Komal Ni. Light and romantic, often used for thumri.' }],
+  ['hindustani', 'kafi', 'Kafi', [0, 2, 3, 5, 7, 9, 10], { g: 'thaat', sub: 'Thaat', o: 'North India', d: 'Komal Ga and Ni. Folk-like, sung at Holi.' }],
+  ['hindustani', 'asavari', 'Asavari', [0, 2, 3, 5, 7, 8, 10], { g: 'thaat', sub: 'Thaat', o: 'North India', d: 'Komal Ga, Dha and Ni. Serious late-morning mood.' }],
+  ['hindustani', 'bhairavi', 'Bhairavi', [0, 1, 3, 5, 7, 8, 10], { g: 'thaat', sub: 'Thaat', o: 'North India', d: 'All komal swaras. Concerts traditionally close in Bhairavi.' }],
+  ['hindustani', 'bhairav', 'Bhairav', [0, 1, 4, 5, 7, 8, 11], { g: 'thaat', sub: 'Thaat', o: 'North India', d: 'Komal Re and Dha. A dawn raga of devotion.' }],
+  ['hindustani', 'kalyan', 'Kalyan', [0, 2, 4, 6, 7, 9, 11], { g: 'thaat', sub: 'Thaat', o: 'North India', d: 'Tivra Ma. Parent of Yaman, Bhupali and Shuddha Kalyan.' }],
+  ['hindustani', 'marwa', 'Marwa', [0, 1, 4, 6, 7, 9, 11], { g: 'thaat', sub: 'Thaat', o: 'Marwar, Rajasthan', d: 'Komal Re and tivra Ma. Restless and sung at sunset.' }],
+  ['hindustani', 'poorvi', 'Poorvi', [0, 1, 4, 6, 7, 8, 11], { g: 'thaat', sub: 'Thaat', o: 'Eastern India', d: '"Eastern". Komal Re and Dha with tivra Ma, for dusk.' }],
+  ['hindustani', 'todi', 'Todi', [0, 1, 3, 6, 7, 8, 11], { g: 'thaat', sub: 'Thaat', o: 'North India', d: 'Komal Re, Ga and Dha with tivra Ma. Intense morning raga.' }],
+
+  ['hindustani', 'ahir-bhairav', 'Ahir Bhairav', [0, 1, 4, 5, 7, 9, 10], { g: 'morning', sub: 'Raga · morning', o: 'North India', d: 'Komal Re from Bhairav, komal Ni from Kafi. The same notes as Carnatic Chakravakam.' }],
+  ['hindustani', 'lalit', 'Lalit', [0, 1, 4, 5, 6, 9, 11], { g: 'morning', sub: 'Raga · dawn', o: 'North India', d: 'Both madhyams side by side and no Pa. The strangest and most loved sunrise raga.' }],
+  ['hindustani', 'vibhas', 'Vibhas', [0, 1, 4, 7, 8], { g: 'morning', sub: 'Raga · dawn', o: 'North India', d: 'Pentatonic Bhairav: komal Re and Dha, no Ma or Ni. Bauli in the south.' }],
+  ['hindustani', 'gunakri', 'Gunakri', [0, 1, 5, 7, 8], { g: 'morning', sub: 'Raga · morning', o: 'North India', d: 'Komal Re and Dha with no Ga or Ni. The same five notes as the Japanese In scale.' }],
+  ['hindustani', 'bairagi', 'Bairagi', [0, 1, 5, 7, 10], { g: 'morning', sub: 'Raga · morning', o: 'North India', d: 'An ascetic pentatonic with komal Re and Ni, made popular by Ravi Shankar. Revati in the south.' }],
+  ['hindustani', 'jogiya', 'Jogiya', [0, 1, 5, 7, 8, 11], { g: 'morning', sub: 'Raga · morning', o: 'North India', d: 'Bhairav without Ga. Devotional, with the wandering jogi in mind.' }],
+  ['hindustani', 'nat-bhairav', 'Nat Bhairav', [0, 2, 4, 5, 7, 8, 11], { g: 'morning', sub: 'Raga · morning', o: 'North India', d: 'Bhairav with a shuddha Re. The same notes as harmonic major.' }],
+  ['hindustani', 'basant-mukhari', 'Basant Mukhari', [0, 1, 4, 5, 7, 8, 10], { g: 'morning', sub: 'Raga · morning', o: 'North India', d: 'Bhairav below, Bhairavi above. The notes of Maqam Hijaz.' }],
+  ['hindustani', 'gujari-todi', 'Gujari Todi', [0, 1, 3, 6, 8, 11], { g: 'morning', sub: 'Raga · late morning', o: 'North India', d: 'Todi without Pa. Grave and tender.' }],
+  ['hindustani', 'hindol', 'Hindol', [0, 4, 6, 9, 11], { g: 'morning', sub: 'Raga · morning', o: 'North India', d: 'Tivra Ma with no Re or Pa. A spring swing (hindola); not the Carnatic Hindolam.' }],
+
+  ['hindustani', 'shuddha-sarang', 'Shuddha Sarang', [0, 2, 5, 6, 7, 11], { g: 'afternoon', sub: 'Raga · midday', o: 'North India', d: 'Both madhyams, no Ga or Dha. The noon raga of the Sarang family.' }],
+  ['hindustani', 'brindabani-sarang', 'Brindabani Sarang', [0, 2, 5, 7, 10, 11], { g: 'afternoon', sub: 'Raga · midday', o: 'Vrindavan, North India', d: 'Both nishads, no Ga or Dha. Krishna\'s raga, sung at noon.' }],
+  ['hindustani', 'bhimpalasi', 'Bhimpalasi', [0, 2, 3, 5, 7, 9, 10], { g: 'afternoon', sub: 'Raga · afternoon', o: 'North India', d: 'Kafi notes, rising on five (S g m P n) and falling on all seven. Tender and longing.' }],
+  ['hindustani', 'dhani', 'Dhani', [0, 3, 5, 7, 10], { g: 'afternoon', sub: 'Raga · afternoon', o: 'North India', d: 'Bhimpalasi without Re and Dha: the minor pentatonic as a raga.' }],
+  ['hindustani', 'patdeep', 'Patdeep', [0, 2, 3, 5, 7, 11], { g: 'afternoon', sub: 'Raga · afternoon', o: 'North India', d: 'Komal Ga with a shuddha Ni and no Dha. Bright for the late afternoon.' }],
+  ['hindustani', 'multani', 'Multani', [0, 1, 3, 6, 7, 8, 11], { g: 'afternoon', sub: 'Raga · late afternoon', o: 'Multan, Punjab', d: 'Todi notes sung as the day ends, with Re and Dha only in descent.' }],
+  ['hindustani', 'madhuvanti', 'Madhuvanti', [0, 2, 3, 6, 7, 9, 11], { g: 'afternoon', sub: 'Raga · late afternoon', o: 'North India', d: 'Komal Ga with tivra Ma. A 20th-century raga, sweet as its name.' }],
+
+  ['hindustani', 'yaman', 'Yaman', [0, 2, 4, 6, 7, 9, 11], { g: 'evening', sub: 'Raga · evening · Kalyan thaat', o: 'North India', d: 'Tivra Ma and all else shuddha. The first raga most students learn, and an evening favourite in film song.' }],
+  ['hindustani', 'bhupali', 'Bhupali', [0, 2, 4, 7, 9], { g: 'evening', sub: 'Raga · evening · Mohanam', o: 'India', d: 'Pentatonic evening raga. Called Mohanam in the south.' }],
+  ['hindustani', 'hamsadhwani', 'Hamsadhwani', [0, 2, 4, 7, 11], { g: 'evening', sub: 'Raga · evening', o: 'South India', scene: 'palms', d: '"Cry of the swan". Carnatic in origin, now sung in both traditions.' }],
+  ['hindustani', 'puriya-dhanashree', 'Puriya Dhanashree', [0, 1, 4, 6, 7, 8, 11], { g: 'evening', sub: 'Raga · sunset', o: 'North India', d: 'Poorvi notes for the hour the lamps are lit. Raga Shree shares them.' }],
+  ['hindustani', 'puriya', 'Puriya', [0, 1, 4, 6, 9, 11], { g: 'evening', sub: 'Raga · sunset', o: 'North India', d: 'Komal Re and tivra Ma with no Pa. Marwa and Sohini use the same six notes.' }],
+  ['hindustani', 'kalavati', 'Kalavati', [0, 4, 7, 9, 10], { g: 'evening', sub: 'Raga · evening', o: 'India', d: 'Pentatonic with no Re or Ma. Playful; Valaji in the south.' }],
+  ['hindustani', 'desh', 'Desh', [0, 2, 4, 5, 7, 9, 10, 11], { g: 'evening', sub: 'Raga · evening', o: 'North India', d: 'Shuddha Ni rising, komal Ni falling. The raga of "Vande Mataram" and the rains.' }],
+  ['hindustani', 'tilang', 'Tilang', [0, 4, 5, 7, 10, 11], { g: 'evening', sub: 'Raga · evening', o: 'North India', d: 'Both nishads, no Re or Dha. Light, for thumri and bhajan.' }],
+  ['hindustani', 'bihag', 'Bihag', [0, 2, 4, 5, 6, 7, 9, 11], { g: 'evening', sub: 'Raga · late evening', o: 'North India', d: 'Bilawal with a touch of tivra Ma in descent. Romantic.' }],
+  ['hindustani', 'jaijaiwanti', 'Jaijaiwanti', [0, 2, 3, 4, 5, 7, 9, 10, 11], { g: 'evening', sub: 'Raga · evening', o: 'North India', d: 'Both gandhars and both nishads. Ornate; the last of the 31 ragas of the Guru Granth Sahib.' }],
+  ['hindustani', 'charukeshi', 'Charukeshi', [0, 2, 4, 5, 7, 8, 10], { g: 'evening', sub: 'Raga · evening', o: 'South India · adopted in the north', scene: 'palms', d: 'Major below, minor above. Melakarta 26, now a film favourite in both traditions.' }],
+  ['hindustani', 'gorakh-kalyan', 'Gorakh Kalyan', [0, 2, 5, 7, 9, 10], { g: 'evening', sub: 'Raga · evening', o: 'North India', d: 'No Ga, and Pa only in descent. Named for the yogi Gorakhnath; folk-like and calm.' }],
+  ['hindustani', 'bhinna-shadja', 'Bhinna Shadja', [0, 4, 5, 9, 11], { g: 'evening', sub: 'Raga · evening', o: 'North India', d: 'Pentatonic with no Re or Pa. Also called Kaushik Dhwani.' }],
+
+  ['hindustani', 'malkauns', 'Malkauns', [0, 3, 5, 8, 10], { g: 'night', sub: 'Raga · midnight · Hindolam', o: 'India', d: 'A midnight raga, deep and meditative. Called Hindolam in the south.' }],
+  ['hindustani', 'darbari', 'Darbari Kanada', [0, 2, 3, 5, 7, 8, 10], { g: 'night', sub: 'Raga · late night', o: 'North India', d: 'Asavari notes sung slow and low, with a slow shake on komal Ga and Dha. Tansen\'s court raga.' }],
+  ['hindustani', 'bageshri', 'Bageshri', [0, 2, 3, 5, 7, 9, 10], { g: 'night', sub: 'Raga · night', o: 'North India', d: 'Kafi notes with a weak Pa. A raga of waiting for the beloved.' }],
+  ['hindustani', 'rageshri', 'Rageshri', [0, 2, 4, 5, 9, 10], { g: 'night', sub: 'Raga · night', o: 'North India', d: 'Bageshri\'s cousin with a shuddha Ga and no Pa.' }],
+  ['hindustani', 'chandrakauns', 'Chandrakauns', [0, 3, 5, 8, 11], { g: 'night', sub: 'Raga · night', o: 'North India', d: 'Malkauns with a shuddha Ni. Moonlit and modern.' }],
+  ['hindustani', 'abhogi', 'Abhogi', [0, 2, 3, 5, 9], { g: 'night', sub: 'Raga · night', o: 'South India · adopted in the north', d: 'Komal Ga with no Pa or Ni. Carnatic in origin, sung as Abhogi Kanada in the north.' }],
+  ['hindustani', 'kirwani', 'Kirwani', [0, 2, 3, 5, 7, 8, 11], { g: 'night', sub: 'Raga · night', o: 'South India · adopted in the north', scene: 'palms', d: 'Harmonic minor as a raga. Melakarta 21, loved on sitar and in film.' }],
+  ['hindustani', 'jog', 'Jog', [0, 3, 4, 5, 7, 10], { g: 'night', sub: 'Raga · night', o: 'North India', d: 'Both gandhars, no Re or Dha. Bluesy and bold.' }],
+  ['hindustani', 'shivaranjani', 'Shivaranjani', [0, 2, 3, 7, 9], { g: 'night', sub: 'Raga · night', o: 'India', d: 'Pentatonic with komal Ga. Plaintive, much loved in film songs.' }],
+  ['hindustani', 'durga', 'Durga', [0, 2, 5, 7, 9], { g: 'night', sub: 'Raga · night', o: 'India', d: 'Pentatonic without Ga and Ni. Bright and devotional.' }],
+  ['hindustani', 'megh', 'Megh', [0, 2, 5, 7, 10], { g: 'night', sub: 'Raga · monsoon · Madhyamavati', o: 'India', d: 'The monsoon raga, said to summon rain clouds.' }],
+  ['hindustani', 'miyan-malhar', 'Miyan ki Malhar', [0, 2, 3, 5, 7, 9, 10, 11], { g: 'night', sub: 'Raga · monsoon', o: 'North India', d: 'Both nishads over Kafi. Tansen\'s rain raga.' }],
 
   // China & Korea
   ['china', 'gong', 'Gong mode', [0, 2, 4, 7, 9], { sub: 'Chinese pentatonic', o: 'China', d: 'Gong, the "palace" note, as home. The bright Chinese pentatonic.' }],
@@ -110,6 +172,9 @@ const RAW = [
   ['china', 'yu', 'Yu mode', [0, 3, 5, 7, 10], { sub: 'Chinese pentatonic', o: 'China', d: 'Starts on Yu, the "feather" note. Wistful and minor.' }],
   ['china', 'pyeongjo', 'Pyeongjo', [0, 2, 5, 7, 9], { sub: 'Korean', o: 'Korea', scene: 'pines', d: 'The calm, "even" mode of Korean court and folk music.' }],
   ['china', 'gyemyeonjo', 'Gyemyeonjo', [0, 3, 5, 7, 10], { sub: 'Korean', o: 'Korea', scene: 'pines', d: 'The sorrowful Korean mode heard in Arirang laments.' }],
+  ['china', 'qingyue', 'Qingyue', [0, 2, 4, 5, 7, 9, 11], { sub: 'Chinese heptatonic', o: 'China', d: 'The pentatonic plus two passing bian notes. The "clear music" scale, equal to major.' }],
+  ['china', 'yayue', 'Yayue', [0, 2, 4, 6, 7, 9, 11], { sub: 'Chinese heptatonic', o: 'China', d: 'The court "elegant music" scale with a raised 4th. The same notes as Lydian.' }],
+  ['china', 'yanyue', 'Yanyue', [0, 2, 4, 5, 7, 9, 10], { sub: 'Chinese heptatonic', o: 'China', d: 'The "banquet music" scale with a ♭7. The same notes as Mixolydian.' }],
 
   // Japan
   ['japan', 'in', 'In scale', [0, 1, 5, 7, 8], { sub: 'Japanese Miyako-bushi', o: 'Kyoto, Japan', d: 'The "city" scale of koto and shamisen. Dark half steps.' }],
@@ -119,9 +184,13 @@ const RAW = [
   ['japan', 'kumoi', 'Kumoi', [0, 2, 3, 7, 9], { sub: 'Koto tuning', o: 'Japan', d: '"Among the clouds". A koto tuning.' }],
   ['japan', 'insen', 'Insen', [0, 1, 5, 7, 10], { o: 'Japan', d: 'In scale with a ♭7. Haunting.' }],
   ['japan', 'ryukyu', 'Ryūkyū', [0, 4, 5, 7, 11], { sub: 'Okinawan', o: 'Okinawa, Japan', scene: 'island', d: 'The island scale of the sanshin, with no 2nd or 6th. Sunny and lilting.' }],
+  ['japan', 'ryo', 'Ryo', [0, 2, 4, 7, 9], { sub: 'Shōmyō · gagaku', o: 'Japan', d: 'The "male" scale of Buddhist chant and court music.' }],
+  ['japan', 'ritsu', 'Ritsu', [0, 2, 5, 7, 9], { sub: 'Shōmyō · gagaku', o: 'Japan', d: 'The "female" scale of Buddhist chant, and the root of the Yo scale.' }],
 
   // Southeast Asia
   ['seasia', 'pelog', 'Pelog', [0, 1.2, 2.7, 5.4, 6.7, 7.85, 9.5], { sub: 'Javanese · gamelan tuning', o: 'Java, Indonesia', d: 'Seven unequal steps, and every gamelan has its own. These are the cents of one Javanese set.' }],
+  ['seasia', 'pelog-bem', 'Pelog bem', [0, 1.2, 2.7, 6.7, 7.85], { sub: 'Javanese pathet · five of pelog', o: 'Java, Indonesia', d: 'Pelog notes 1 2 3 5 6, the five most pieces actually use.' }],
+  ['seasia', 'pelog-barang', 'Pelog barang', [0, 1.5, 5.5, 6.65, 8.3], { sub: 'Javanese pathet · five of pelog', o: 'Java, Indonesia', d: 'Pelog notes 2 3 5 6 7, with note 7 in place of 1.' }],
   ['seasia', 'slendro', 'Slendro', [0, 2.4, 4.8, 7.2, 9.6], { sub: 'Javanese · ≈ 5 equal steps', o: 'Java, Indonesia', d: 'Five nearly equal steps, each between a whole tone and a minor 3rd.' }],
   ['seasia', 'degung', 'Degung', [0, 1, 3, 7, 8], { sub: 'Sundanese ≈ 12-tone', o: 'West Java, Indonesia', d: 'The gentle gamelan degung of the Sundanese courts.' }],
   ['seasia', 'selisir', 'Selisir', [0, 1, 3, 7, 8], { sub: 'Balinese ≈ 12-tone', o: 'Bali, Indonesia', scene: 'terraces', d: 'The five-note pelog mode of Balinese gong kebyar.' }],
@@ -137,6 +206,8 @@ const RAW = [
   ['africa', 'chopi', 'Equiheptatonic', [0, 1.714, 3.429, 5.143, 6.857, 8.571, 10.286], { sub: 'Chopi timbila · 7-tone equal', o: 'Mozambique', d: 'Chopi xylophone orchestras tune the octave to seven near-equal steps.' }],
   ['africa', 'sauta', 'Sauta', [0, 2, 4, 6, 7, 9, 11], { sub: 'Kora tuning', o: 'Mali · Gambia · Senegal', d: 'A Mande kora tuning with a raised 4th.' }],
   ['africa', 'hardino', 'Hardino', [0, 2, 4, 5, 7, 9, 11], { sub: 'Kora tuning', o: 'Mali · Gambia · Senegal', d: 'A Mande kora tuning close to the major scale.' }],
+  ['africa', 'tomora', 'Tomora', [0, 2, 4, 5, 7, 9, 10], { sub: 'Kora tuning', o: 'Mali · Gambia · Senegal', d: 'A Mande kora tuning with a ♭7. The same notes as Mixolydian.' }],
+  ['africa', 'gnawa', 'Gnawa', [0, 3, 5, 7, 10], { sub: 'Guembri · pentatonic', o: 'Morocco', scene: 'desert', d: 'The trance pentatonic of the Gnawa, carried north across the Sahara on the bass guembri.' }],
   ['africa', 'mbira', 'Nyamaropa', [0, 2, 3.5, 5, 7, 8.5, 10], { sub: 'Mbira tuning · approx.', o: 'Zimbabwe (Shona)', d: 'A Shona mbira tuning. Its neutral 3rd and 6th vary from maker to maker.' }],
 
   // Symmetric and synthetic
@@ -165,15 +236,38 @@ export function melakarta(n) {
   return [0, r, g, ma, 7, d, ni];
 }
 
+// Well-known janya (derived) ragas: id, name, parent melakarta, steps, note.
+const JANYA = [
+  ['mohanam', 'Mohanam', 28, [0, 2, 4, 7, 9], 'The pentatonic of the first varnam, Ninnukori. Bhupali in the north.'],
+  ['hindolam', 'Hindolam', 20, [0, 3, 5, 8, 10], 'Minor pentatonic with no Pa. Malkauns in the north.'],
+  ['madhyamavati', 'Madhyamavati', 22, [0, 2, 5, 7, 10], 'Concerts end with it, for auspiciousness. Megh in the north.'],
+  ['abheri', 'Abheri', 22, [0, 2, 3, 5, 7, 9, 10], 'Rises on five notes, falls on seven. Bhimpalasi in the north.'],
+  ['sriranjani', 'Sriranjani', 22, [0, 2, 3, 5, 9, 10], 'Kharaharapriya without Pa. Bright despite its komal notes.'],
+  ['shuddha-dhanyasi', 'Shuddha Dhanyasi', 22, [0, 3, 5, 7, 10], 'The minor pentatonic. Dhani in the north.'],
+  ['revati', 'Revati', 2, [0, 1, 5, 7, 10], 'Komal Re and Ni with no Ga or Dha. Bairagi in the north.'],
+  ['shuddha-saveri', 'Shuddha Saveri', 29, [0, 2, 5, 7, 9], 'Pentatonic without Ga or Ni. Durga in the north.'],
+  ['bilahari', 'Bilahari', 29, [0, 2, 4, 5, 7, 9, 11], 'Rises on the major pentatonic, falls on all seven.'],
+  ['nalinakanti', 'Nalinakanti', 27, [0, 2, 4, 5, 7, 11], 'No Dha; famous from Tyagaraja\'s Manavyalakinchara.'],
+  ['bauli', 'Bauli', 15, [0, 1, 4, 7, 8], 'Pentatonic Mayamalavagowla. Vibhas in the north.'],
+  ['valaji', 'Valaji', 28, [0, 4, 7, 9, 10], 'Pentatonic with no Re or Ma. Kalavati in the north.'],
+  ['hamsanandi', 'Hamsanandi', 53, [0, 1, 4, 6, 9, 11], 'Komal Re and tivra Ma, no Pa. Puriya and Sohini in the north.'],
+  ['amritavarshini', 'Amritavarshini', 66, [0, 4, 6, 7, 11], '"Rain of nectar". Dikshitar is said to have sung rain down on Ettayapuram with it.'],
+];
+
 export const SCALES = RAW.map(([region, id, name, steps, x]) => ({ region, id, name, steps, ...x }));
 for (let n = 1; n <= 72; n++) {
   SCALES.push({
-    region: 'carnatic', id: `mela-${n}`, name: MELA_NAMES[n - 1], steps: melakarta(n), mela: n,
+    region: 'carnatic', id: `mela-${n}`, name: MELA_NAMES[n - 1], steps: melakarta(n), mela: n, g: 'mela',
     sub: `Melakarta ${n} · ${CHAKRAS[Math.floor((n - 1) / 6)]} chakra`,
     o: 'South India',
     d: `Melakarta ${n} of 72. Every Carnatic raga descends from one of these parent scales. ${n <= 36 ? 'Shuddha' : 'Prati'} Madhyamam.`,
   });
 }
+JANYA.forEach(([id, name, parent, steps, d]) => SCALES.push({
+  region: 'carnatic', id, name, steps, parent, g: 'janya',
+  sub: `Janya · ${MELA_NAMES[parent - 1]} (${parent})`, o: 'South India',
+  d: `${d} Born of melakarta ${parent}, ${MELA_NAMES[parent - 1]}.`,
+}));
 
 export const byId = Object.fromEntries(SCALES.map(s => [s.id, s]));
 export const regionOf = id => REGIONS.find(r => r.id === id);

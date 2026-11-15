@@ -7,11 +7,16 @@ tanpura or pad drone.
 
 Live: https://gamut.sankhacooray.com
 
-- About 180 scales across 12 regions: Western modes, blues (including microtonal
-  blue notes), jazz, Arabic maqamat and Persian dastgahs with true quarter
-  tones, folk Europe and klezmer, Hindustani thaats and ragas, all 72 Carnatic
-  melakartas, China and Korea, Japan, Southeast Asia (pelog, slendro, Thai
-  7-equal), Africa (Ethiopian qenet, kora, mbira, Chopi) and symmetric scales.
+- About 250 scales across 12 regions: Western modes, blues (including microtonal
+  blue notes), jazz, Arabic maqamat, Persian dastgahs and a Turkish makam with
+  true quarter tones, folk Europe (klezmer, Greek dromoi, Gaelic hexatonics),
+  Hindustani thaats and some forty ragas grouped by time of day, all 72
+  Carnatic melakartas plus well-known janya ragas, China and Korea, Japan,
+  Southeast Asia (pelog and its pathet, slendro, Thai 7-equal), Africa
+  (Ethiopian qenet, kora, mbira, Gnawa, Chopi) and symmetric scales.
+- Long regions are split into sub-tabs (thaats and ragas by time of day;
+  melakartas and janyas; quarter-tone and 12-tone maqamat) so the list never
+  scrolls.
 - "Same shape elsewhere" links scales with identical notes or modes across
   cultures (Kafi = Dorian = Kharaharapriya).
 - "Draw a shape" lets you tap sockets to build a scale and see what it is called

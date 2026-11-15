@@ -34,8 +34,8 @@ its home culture.
 | Export | What |
 |---|---|
 | `NOTE_NAMES` | Display names with ♭/♯ |
-| `REGIONS` | 12 regions: `id, name, tag, hue, scene, voice, drone?` |
-| `SCALES` | 180 scales: `region, id, name, steps, sub?, o, d, scene?` |
+| `REGIONS` | 12 regions: `id, name, tag, hue, scene, voice, drone?, groups?` |
+| `SCALES` | 255 scales: `region, id, name, steps, sub?, o, d, scene?, g?, mela?, parent?` |
 | `byId`, `regionOf(id)` | Lookups |
 | `melakarta(n)` | Steps for melakarta 1–72 (from the RIGA/DHANI tables) |
 | `matches(steps, selfId)` | Other scales with the same pitch set (`same`) or a rotation of it (`mode`, with the offset) |
@@ -48,9 +48,24 @@ Scale fields:
   Ryūkyū → `island`, Selisir → `terraces`, Thai → `river`,
   Ethiopian → `highlands`.
 
-Count by region: western 12, blues 6, jazz 13, arabic 13, europe 10,
-hindustani 16, carnatic 72 (generated), china 7, japan 7, seasia 5, africa 10,
-symmetric 9.
+- `g` names the scale's group in a region with `groups` (`[{id, name}]`); the
+  list pane shows those groups as sub-tabs, one at a time, so a long region
+  never scrolls. Hindustani: `thaat` and ragas by time of day (`morning`,
+  `afternoon`, `evening`, `night`); Carnatic: `mela` (the 72-cell grid) and
+  `janya`; Arabic: `maqam-q` (quarter-tone), `maqam` (12-tone), `persian`
+  (dastgah and makam). `app.js` keeps the shown tab in `listTab`, which follows
+  the picked scale. Chips drop a first word that every name in the shown list
+  shares ("Maqam Rast" → "Rast"); the full name stays on the plate.
+- A raga's steps are its full note set (aroha ∪ avaroha). Ragas that differ
+  from their thaat only by movement (Yaman, Darbari, Bhimpalasi, Bageshri,
+  Puriya Dhanashree, Multani) share the thaat's shape and are linked to it by
+  `matches`.
+- `mela` marks a generated melakarta; `parent` is a janya raga's melakarta
+  number (its only ghost polygon on the wheel).
+
+Count by region: western 12, blues 6, jazz 13, arabic 24, europe 15,
+hindustani 52, carnatic 86 (72 generated + 14 janya), china 10, japan 9,
+seasia 7, africa 12, symmetric 9.
 
 **Adding a scale:** append one line to `RAW` in its region block:
 

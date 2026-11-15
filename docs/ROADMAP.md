@@ -32,6 +32,11 @@ Hooks already in place:
 
 ## Done since v1
 
+- More scales (2026-11-04): 36 Hindustani ragas by time of day (Yaman,
+  Darbari, Bhimpalasi, Bageshri, Lalit, Ahir Bhairav, Desh, Jog…), 14 Carnatic
+  janya ragas, 11 maqamat/dastgahs/makam, Greek dromoi and Gaelic hexatonics,
+  Chinese heptatonics, Ryo/Ritsu, pelog pathet, kora Tomora and Gnawa. Long
+  regions now use sub-tabs instead of one list.
 - Philips Hue (2026-10-28): the ambient colour follows the scene and the lamps
   flash on every note, through a local relay. See ARCHITECTURE.md.
 

@@ -127,6 +127,14 @@ button { font: inherit; color: inherit; }
 .region.on { background: var(--surface-3); }
 
 .scales { display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; min-height: 0; overflow: hidden; }
+/* Sub-tabs split a long region list (thaats and ragas by time of day, melakartas and janyas) so nothing scrolls. */
+.subtabs { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 3px; }
+.subtab {
+  height: 22px; padding: 0 9px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); cursor: pointer;
+  font-size: 11px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; transition: background-color .2s, color .2s;
+}
+.subtab:hover { background: var(--surface-2); color: var(--text); }
+.subtab.on { background: var(--acc-soft); color: var(--text); }
 .chip {
   height: 28px; padding: 0 11px; border-radius: 999px; border: 0; background: var(--surface-2); cursor: pointer;
   font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;

@@ -61,13 +61,31 @@ function renderRegions() {
   });
 }
 
+// Sub-tab shown in the list for regions with groups; follows the picked scale.
+let listTab = null;
+
 function renderList() {
   const r = region(), box = $('scales');
   box.innerHTML = '';
   box.className = 'scales';
-  const list = SCALES.filter(s => s.region === r.id);
-  if (r.id === 'carnatic') {
-    $('list-head').textContent = '72 melakartas';
+  let list = SCALES.filter(s => s.region === r.id);
+  $('list-head').textContent = r.name;
+  let tab = null;
+  if (r.groups) {
+    tab = r.groups.some(g => g.id === listTab) ? listTab : (current().g || r.groups[0].id);
+    const tabs = document.createElement('div');
+    tabs.className = 'subtabs';
+    r.groups.forEach(g => {
+      const b = document.createElement('button');
+      b.className = 'subtab' + (g.id === tab ? ' on' : '');
+      b.textContent = g.name;
+      b.onclick = () => { listTab = g.id; renderList(); };
+      tabs.appendChild(b);
+    });
+    box.appendChild(tabs);
+    list = list.filter(s => s.g === tab);
+  }
+  if (tab === 'mela') {
     box.className = 'scales mela-box';
     const grid = document.createElement('div');
     grid.className = 'mela';
@@ -86,11 +104,13 @@ function renderList() {
     box.appendChild(lg);
     return;
   }
-  $('list-head').textContent = r.name;
+  // Chips drop a first word every name in the list shares ("Maqam …"): the tab already says it.
+  const first = list.map(s => s.name.split(' ')[0]);
+  const prefix = list.length > 2 && first.every(w => w === first[0] && w.length < list.find(s => s.name.startsWith(w)).name.length) ? first[0] + ' ' : '';
   list.forEach(s => {
     const b = document.createElement('button');
     b.className = 'chip' + (s === state.scale && !state.custom ? ' on' : '');
-    b.textContent = s.name;
+    b.textContent = s.name.slice(prefix.length);
     b.onclick = () => pick(s);
     box.appendChild(b);
   });
@@ -107,9 +127,11 @@ function renderStage() {
   [cap, $('plate'), $('origin')].forEach(e => { e.classList.remove('fade-in'); void e.offsetWidth; e.classList.add('fade-in'); });
 
   const pcs = s.steps.map(x => (state.root + x) % 12);
-  const ghosts = (s.region === 'carnatic' && s.mela
+  // Faint neighbours: nearby melakartas, a janya's parent, or the rest of the group.
+  const ghosts = (s.mela
     ? [-2, -1, 1, 2].map(d => byId[`mela-${s.mela + d}`]).filter(Boolean)
-    : SCALES.filter(o => o.region === s.region && o.id !== s.id && o.steps.length <= 12))
+    : s.parent ? [byId[`mela-${s.parent}`]]
+    : SCALES.filter(o => o.region === s.region && o.id !== s.id && o.g === s.g && o.steps.length <= 12))
     .map(o => o.steps.map(x => (state.root + x) % 12));
   const labels = s.steps.map(label);
   wheel.set(pcs, ghosts, labels);
@@ -210,7 +232,7 @@ function update(push = true) {
 
 // ---- actions ---------------------------------------------------------------
 function pick(s) {
-  state.scale = s; state.custom = null;
+  state.scale = s; state.custom = null; listTab = s.g || null;
   restartIfPlaying();
   update();
 }
