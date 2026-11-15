@@ -5,6 +5,8 @@ import { Scene, lampColours } from './scene.js';
 import { Hue } from './hue.js';
 import { Midi } from './midi.js';
 import { MODES, FADE_STAGES, keyMap, resolve, Fader } from './assist.js';
+import { Remix } from './song.js';
+import { fromFile, fromCadence, demo } from './songfile.js';
 
 const $ = id => document.getElementById(id);
 const URL_NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Fs', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -18,6 +20,11 @@ const scene = new Scene($('scene'));
 const state = { scale: byId.hijaz, root: 0, voice: 'auto', pattern: 'updown', bpm: 150, drone: false, edit: false, custom: null };
 let playing = null;
 const hue = new Hue(renderHue);
+// Remix player: a loaded song's notes, moved to whichever scale is picked (song.js).
+const MOODS = [{ id: '', name: 'As written' }, { id: 'aeolian', name: 'Sad' }, { id: 'phrygian', name: 'Dark' }, { id: 'locrian', name: 'Scary' },
+  { id: 'lydian', name: 'Dreamy' }, { id: 'blues', name: 'Bluesy' }, { id: 'hijaz', name: 'Desert' }, { id: 'hirajoshi', name: 'Japan' }];
+let syncing = false;                       // true while the wheel is following the song, not the other way round
+const remix = new Remix(engine, { change: songChanged, note: songNote, state: renderPlayState });
 
 const wheel = new Wheel($('wheel'), {
   onNode: i => playDegree(i),
@@ -133,7 +140,8 @@ function renderStage() {
   const s = current(), r = region();
   document.documentElement.style.setProperty('--h', r.hue);
   $('plate-name').textContent = s.name;
-  $('plate-sub').textContent = s.sub || r.tag;
+  const sv = remix.song ? remix.view() : null;
+  $('plate-sub').textContent = sv?.changed ? `was ${NOTE_NAMES[sv.wasRoot]} ${sv.was.name}` : s.sub || r.tag;
   $('origin-text').textContent = s.o || '';
   const cap = $('caption');
   cap.textContent = state.edit ? DRAW_HINT : s.d || '';
@@ -141,11 +149,11 @@ function renderStage() {
 
   const pcs = s.steps.map(x => (state.root + x) % 12);
   // Faint neighbours: nearby melakartas, a janya's parent, or the rest of the group.
-  const ghosts = (s.mela
+  const ghosts = sv ? (sv.changed ? [sv.was.steps.map(x => (sv.wasRoot + x) % 12)] : []) : ((s.mela
     ? [-2, -1, 1, 2].map(d => byId[`mela-${s.mela + d}`]).filter(Boolean)
     : s.parent ? [byId[`mela-${s.parent}`]]
     : SCALES.filter(o => o.region === s.region && o.id !== s.id && o.g === s.g && o.steps.length <= 12))
-    .map(o => o.steps.map(x => (state.root + x) % 12));
+    .map(o => o.steps.map(x => (state.root + x) % 12)));
   const labels = s.steps.map(label);
   wheel.set(pcs, ghosts, labels);
   wheel.setOrb(NOTE_NAMES[state.root]);
@@ -223,6 +231,19 @@ function renderControls() {
   const autoName = `Auto · ${VOICES.find(v => v.id === region().voice).name}`;
   seg('voices', [{ id: 'auto', name: autoName }, ...VOICES], 'voice', () => note(rootMidi()));
   seg('patterns', PATTERNS, 'pattern', restartIfPlaying);
+  remix.leadVoice = state.voice === 'auto' ? null : state.voice;
+  if (remix.song) {
+    const v = remix.view(), box = $('moods');
+    box.innerHTML = '';
+    MOODS.forEach(m => {
+      const b = document.createElement('button');
+      b.className = 'chip' + ((m.id ? v.changed && v.scale.id === m.id : !v.changed) ? ' on' : '');
+      b.textContent = m.name;
+      b.onclick = () => { if (m.id) pick(byId[m.id]); else { state.root = v.wasRoot; show(v.was); update(); } };
+      box.appendChild(b);
+    });
+    $('keep-btn').setAttribute('aria-pressed', remix.keep);
+  }
   $('drone-btn').setAttribute('aria-pressed', state.drone);
   $('edit-btn').setAttribute('aria-pressed', state.edit);
   wheel.setEdit(state.edit);
@@ -236,8 +257,10 @@ function renderHue() {
 }
 
 function update(push = true) {
+  if (remix.song && !syncing) remix.assign(current(), state.root);
   renderRegions(); renderList(); renderLeftTab(); renderStage(); renderControls();
   assistReset();
+  if (remix.song) remix.drawRoll();          // after the stage: the roll takes the region's colour
   if (state.drone) startDrone();
   if (push) {
     const id = state.custom ? 'custom-' + state.custom.steps.join('.') : state.scale.id;
@@ -246,6 +269,12 @@ function update(push = true) {
 }
 
 // ---- actions ---------------------------------------------------------------
+// Put a scale on the wheel: a library scale, or a shape of its own (drawn, or found in a song).
+function show(s) {
+  if (s.id === 'custom') state.custom = s; else { state.scale = s; state.custom = null; }
+  listTab = s.g || null;
+}
+
 function pick(s) {
   state.scale = s; state.custom = null; listTab = s.g || null;
   restartIfPlaying();
@@ -291,6 +320,7 @@ function sequence() {
 }
 
 function play() {
+  if (remix.song) { remix.toggle(); return; }
   if (playing) { stop(); return; }
   const seq = sequence();
   const step = 60 / state.bpm;
@@ -312,6 +342,65 @@ function stop() {
   wheel.play(null); wheel.cometAt(null); flashNote(-1);
   $('play-btn').classList.remove('playing');
   $('play-btn').querySelector('.cta-label').textContent = 'Hear this scale';
+}
+
+// ---- remix a song (player in song.js) ---------------------------------------
+// The song, or the stretch picked in its timeline, changed: the wheel follows it.
+function songChanged() {
+  stop();
+  syncing = true;
+  if (remix.song) { const v = remix.view(); state.root = v.root; show(v.scale); }
+  update(false);
+  syncing = false;
+  renderPlayState();
+}
+
+function renderPlayState() {
+  const b = $('play-btn');
+  if (!remix.song) { if (!playing) { b.classList.remove('playing'); b.querySelector('.cta-label').textContent = 'Hear this scale'; } return; }
+  b.classList.toggle('playing', remix.playing);
+  b.querySelector('.cta-label').textContent = remix.playing ? 'Pause' : 'Play song';
+}
+
+// A melody note sounded: light its place on the wheel.
+function songNote(m) {
+  const rel = ((m - state.root) % 12 + 12) % 12, k = steps().findIndex(x => Math.abs(x - rel) < 0.02);
+  scene.pulse(0.4); hue.pulse(k < 0 ? 0 : k / steps().length, 0.6);
+  if (k < 0) return;
+  wheel.play(k); flashNote(k);
+  clearTimeout(songNote.t);
+  songNote.t = setTimeout(() => { wheel.play(null); flashNote(-1); }, 240);
+}
+
+function songMsg(text) { $('song-msg').textContent = text || 'Or drop a file anywhere on the page.'; }
+function openSong(open) { $('song-open').hidden = !open; if (open) songMsg(''); }
+async function loadSongFile(file) {
+  if (!file) return;
+  try { remix.load(await fromFile(file)); openSong(false); }
+  catch (e) { openSong(true); songMsg(e.message || 'That file could not be read.'); }
+}
+$('song-btn').onclick = () => openSong(true);
+$('song-open').onclick = e => { if (e.target === $('song-open')) openSong(false); };
+$('song-demo').onclick = () => { remix.load(demo()); openSong(false); };
+$('song-file').onclick = () => $('song-input').click();
+$('song-input').onchange = e => { loadSongFile(e.target.files[0]); e.target.value = ''; };
+addEventListener('dragover', e => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault(); });
+addEventListener('drop', e => { if (e.dataTransfer?.files.length) { e.preventDefault(); loadSongFile(e.dataTransfer.files[0]); } });
+$('speed').oninput = e => { $('speed-out').textContent = `${e.target.value}%`; };
+$('speed').onchange = e => remix.setSpeed(+e.target.value / 100);
+$('keep-btn').onclick = () => { remix.keep = !remix.keep; remix.remap(); remix.renderLanes(); remix.drawRoll(); renderControls(); };
+
+// Hand-off from Cadence: ?song=<url of a note export>. Only this origin or the local machine is fetched.
+async function songFromUrl() {
+  const u = new URLSearchParams(location.search).get('song');
+  if (!u) return;
+  try {
+    const url = new URL(u, location.href);
+    if (url.origin !== location.origin && !['127.0.0.1', 'localhost'].includes(url.hostname)) throw new Error('Songs can only be opened from this computer.');
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Cadence has no notes for that song yet.');
+    remix.load(fromCadence(await r.json()));
+  } catch (e) { openSong(true); songMsg(e instanceof TypeError ? 'Cadence is not running on this computer.' : e.message); }
 }
 
 function restartIfPlaying() { if (playing) { stop(); setTimeout(play, 60); } }
@@ -474,6 +563,7 @@ $('theme-btn').onclick = () => {
   document.documentElement.dataset.theme = t;
   try { localStorage.setItem('sc-theme', t); } catch (e) {}
   themeLabel(); scene.set(current().scene || region().scene, isLight());
+  if (remix.song) remix.drawRoll();
 };
 matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { themeLabel(); scene.set(current().scene || region().scene, isLight()); });
 
@@ -498,7 +588,8 @@ addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey || e.target.tagName === 'INPUT') return;
   if (e.key === 'H') { hue.lights.length ? hue.set(!hue.on) : hue.connect(); return; }
   const k = e.key.toLowerCase();
-  if (k === 'escape') { $('about').hidden = true; openAssist(false); return; }
+  if (k === 'escape') { $('about').hidden = true; openAssist(false); openSong(false); return; }
+  if (k === 'r') { openSong($('song-open').hidden); return; }
   if (k === 'm') { openAssist($('assist').hidden); return; }
   if (k === ' ') { e.preventDefault(); play(); return; }
   if (k === 'arrowright' || k === 'arrowleft') {
@@ -543,3 +634,4 @@ fromHash();
 themeLabel();
 renderMidi();
 update(false);
+songFromUrl();

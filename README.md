@@ -27,6 +27,11 @@ Live: https://gamut.sankhacooray.com
   played; white keys can play any scale in order; and a Fading guide withdraws
   the help as you improve. A piano diagram shows what every key will sound.
 
+- "Remix a song" (experimental) loads a MIDI file, notes exported from Cadence,
+  or the built-in Happy Birthday, shows the scale of each stretch on a
+  timeline, and replays it through the synths in any other scale: major turned
+  minor, a pop tune in Hijaz. See docs/REMIX.md.
+
 ## Layout
 
 ```
@@ -37,6 +42,9 @@ public/
   js/audio.js         Web Audio engine (MIDI-number API, microtone-safe)
   js/assist.js        play-along key mapping, assist modes, fading guide
   js/midi.js          Web MIDI input
+  js/remap.js         scale-to-scale note mapping, key detection (pure logic)
+  js/songfile.js      song input: Cadence note export, MIDI file parser, demo
+  js/song.js          remix player: scheduler, timeline dock
   js/wheel.js         SVG chromatic wheel with morphing polygon
   js/scene.js         procedural landscapes, particles, camera drift
   js/app.js           state, UI, keyboard, URL hash (#hijaz/D)
@@ -73,4 +81,5 @@ CLOUDFLARE_ACCOUNT_ID=9a1da48a0f61e7cebcba39517856d87e npx wrangler deploy
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how each module works, the data format, how to add a scale, region or scene, and testing pitfalls
 - [docs/ASSIST.md](docs/ASSIST.md): the play-along modes, the research behind fading help, and how it differs from existing scale modes
+- [docs/REMIX.md](docs/REMIX.md): the song remix player, how notes are mapped from one scale to another and why
 - [docs/ROADMAP.md](docs/ROADMAP.md): the MIDI plan (input quantised to the scale, output with pitch-bend microtones), other ideas and known limits

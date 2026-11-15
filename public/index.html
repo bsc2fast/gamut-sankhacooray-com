@@ -59,6 +59,9 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M8.8 5.5v7.5M15.2 5.5v7.5M12 13v5.5M7 13h3.6M13.4 13H17" stroke-linecap="round"/></svg>
     <span class="live-dot" hidden></span>
   </button>
+  <button class="icon-btn" id="song-btn" aria-label="Remix a song in another scale" title="Remix a song in another scale">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/><path d="M9 9.5l10-2"/></svg>
+  </button>
   <button class="icon-btn" id="about-btn" aria-label="About and shortcuts" title="About and shortcuts">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6M12 7.2v.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
   </button>
@@ -90,19 +93,42 @@
     <div class="roots" id="roots"></div>
     <div class="pane-head">Voice</div>
     <div class="seg" id="voices"></div>
-    <div class="pane-head">Run</div>
-    <div class="seg" id="patterns"></div>
-    <div class="row">
+    <div class="pane-head run-only">Run</div>
+    <div class="seg run-only" id="patterns"></div>
+    <div class="row run-only">
       <label class="tempo"><span>Tempo</span><input type="range" id="tempo" min="60" max="260" value="150"><output id="tempo-out">150</output></label>
+    </div>
+    <div class="pane-head song-only">Mood</div>
+    <div class="seg song-only" id="moods"></div>
+    <div class="row song-only">
+      <label class="tempo"><span>Speed</span><input type="range" id="speed" min="50" max="150" step="5" value="100"><output id="speed-out">100%</output></label>
     </div>
     <div class="row toggles">
       <button class="chip toggle" id="drone-btn" aria-pressed="false"><span class="dot"></span>Drone</button>
       <button class="chip toggle" id="edit-btn" aria-pressed="false"><span class="dot"></span>Draw a shape</button>
+      <button class="chip toggle song-only" id="keep-btn" aria-pressed="false" title="Notes outside the old scale move to the nearest semitone instead of into the new scale"><span class="dot"></span>Keep passing notes</button>
       <button class="chip toggle" id="hue-btn" aria-pressed="false" hidden><span class="dot"></span>Hue lights</button>
     </div>
     <div class="pane-head" id="match-head">Same shape elsewhere</div>
     <div class="matches" id="matches"></div>
   </aside>
+
+  <div class="dock float" id="dock" hidden>
+    <div class="dock-head">
+      <b class="song-title" id="song-title"></b>
+      <span class="song-time" id="song-time"></span>
+      <span class="grow"></span>
+      <div class="song-tracks" id="song-tracks"></div>
+      <button class="chip toggle sm" id="song-ab" aria-pressed="false" title="Hear it as it was written"><span class="dot"></span>Original</button>
+      <button class="icon-btn sm" id="song-close" aria-label="Close the song" title="Close the song"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="tl" id="song-tl">
+      <span class="tl-lab">Was</span><div class="tl-lane was" id="lane-was"></div>
+      <button class="tl-lab" id="song-whole" aria-pressed="true" title="Change the whole song at once">Now</button><div class="tl-lane now" id="lane-now"></div>
+      <canvas class="tl-roll" id="song-roll"></canvas>
+      <i class="tl-head" id="song-head"></i>
+    </div>
+  </div>
 
   <nav id="scn-apps" data-suite="music"></nav>
 </main>
@@ -118,11 +144,31 @@
       <span><kbd>A</kbd>…<kbd>L</kbd>Play notes</span>
       <span><kbd>D</kbd>Drone</span>
       <span><kbd>M</kbd>Play along</span>
+      <span><kbd>R</kbd>Remix a song</span>
       <span><kbd>Esc</kbd>Close</span>
     </div>
     <p class="muted">Philips Hue: run the local relay from the repo, then press Shift+H. The room takes the scene's colours and flashes with every note.</p>
     <p class="muted">MIDI keyboard: press M or the keyboard button. Choose how keys outside the scale behave, or let the help fade as you improve.</p>
     <p class="muted">Made by <a href="https://sankhacooray.com">Sankha Cooray</a></p>
+  </div>
+</div>
+
+<div class="overlay" id="song-open" hidden>
+  <div class="about-card song-card" role="dialog" aria-label="Remix a song">
+    <h2>Remix a song</h2>
+    <p>Hear a song in another scale: major turned minor, a pop tune in Hijaz.</p>
+    <div class="song-tiles">
+      <button class="song-tile" id="song-demo">
+        <span class="mode-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v13M5 12h14v9H5zM3.5 8h17v4h-17zM12 8c-1.5-4-6-4-5-1.5.6 1.4 3 1.5 5 1.5Zm0 0c1.5-4 6-4 5-1.5-.6 1.4-3 1.5-5 1.5Z"/></svg><b>Happy Birthday</b></span>
+        <span class="mode-text">Try it with a tune you know</span>
+      </button>
+      <button class="song-tile" id="song-file">
+        <span class="mode-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M12 18v-6m0 0-2.5 2.5M12 12l2.5 2.5"/></svg><b>Open a file</b></span>
+        <span class="mode-text">MIDI, or notes exported from Cadence</span>
+      </button>
+    </div>
+    <p class="muted song-msg" id="song-msg">Or drop a file anywhere on the page.</p>
+    <input type="file" id="song-input" accept=".mid,.midi,.json,audio/midi,application/json" hidden>
   </div>
 </div>
 

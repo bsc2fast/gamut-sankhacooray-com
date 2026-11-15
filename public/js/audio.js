@@ -146,6 +146,39 @@ export class Engine {
     this.emit(midi, t);
   }
 
+  // Drum hits for the remix player, by General MIDI note: kick (35, 36), snare
+  // (37–40), anything else a closed hat.
+  drum(p, t, vel = 0.8, dest) {
+    const ctx = this.ensure();
+    dest ||= this.out;
+    t = Math.max(t ?? ctx.currentTime, ctx.currentTime);
+    if (!this.noise) {
+      this.noise = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
+      const d = this.noise.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const g = ctx.createGain(); g.connect(dest);
+    const hiss = (type, freq, len, level) => {
+      const src = ctx.createBufferSource(); src.buffer = this.noise;
+      const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+      const e = ctx.createGain();
+      e.gain.setValueAtTime(level * vel, t); e.gain.exponentialRampToValueAtTime(0.0005, t + len);
+      src.connect(f); f.connect(e); e.connect(g); src.start(t); src.stop(t + len + 0.02);
+    };
+    if (p === 35 || p === 36) {
+      const o = ctx.createOscillator();
+      o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(46, t + 0.12);
+      g.gain.setValueAtTime(0.9 * vel, t); g.gain.exponentialRampToValueAtTime(0.0005, t + 0.28);
+      o.connect(g); o.start(t); o.stop(t + 0.3);
+    } else if (p >= 37 && p <= 40) {
+      const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = 190;
+      const e = ctx.createGain();
+      e.gain.setValueAtTime(0.35 * vel, t); e.gain.exponentialRampToValueAtTime(0.0005, t + 0.09);
+      o.connect(e); e.connect(g); o.start(t); o.stop(t + 0.1);
+      hiss('bandpass', 2600, 0.16, 0.5);
+    } else hiss('highpass', 7500, 0.045, 0.22);
+  }
+
   // Plays a run of notes; returns a handle whose stop() fades it out.
   sequence(midis, { step, voice, onStep }) {
     const ctx = this.ensure();

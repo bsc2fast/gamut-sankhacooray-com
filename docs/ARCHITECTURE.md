@@ -8,6 +8,7 @@ index.html ─ app.js ─┬─ scales.js   data + matching
                      ├─ audio.js    Web Audio engine
                      ├─ wheel.js    SVG wheel
                      ├─ scene.js    canvas landscape
+                     ├─ song.js ─ remap.js, songfile.js   remix player
                      └─ hue.js ─ http://127.0.0.1:8811 ─ scripts/hue-relay.mjs ─ Hue bridge
 ```
 
@@ -209,6 +210,12 @@ Room lights follow the scene and flash with the music.
 - **Play along:** the keyboard button or `M` opens the MIDI assist page. See
   ASSIST.md. `pressKey(n, vel)` in app.js is the one entry point for MIDI and
   on-screen keys; it calls `resolve()` from assist.js and plays the result.
+- **Remix a song:** `song.js` (`Remix`) owns the full-width dock along the bottom (it replaces the apps bar while a song is loaded) and the
+  player; see REMIX.md. `update()` hands every scale or root pick to
+  `remix.assign()` while a song is loaded; `songChanged()` goes the other way
+  (the wheel follows the selected stretch) under the `syncing` flag. The CTA
+  becomes Play song / Pause. `body.has-song` hides `.run-only` rows, the note
+  chips, the caption and Same shape, and shows `.song-only` rows.
 - **Draw a shape:** clicking an empty socket adds a note, clicking a lit
   vertex removes it (the root stays). The caption shows how while it's on. The shape is named when it
   matches a known scale. The URL becomes `#custom-0.1.4.5.7/D`.
