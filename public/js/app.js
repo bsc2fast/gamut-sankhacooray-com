@@ -392,7 +392,22 @@ $('keep-btn').onclick = () => { remix.keep = !remix.keep; remix.remap(); remix.r
 
 // Hand-off from Cadence: ?song=<url of a note export>. Only this origin or the local machine is fetched.
 async function songFromUrl() {
-  const u = new URLSearchParams(location.search).get('song');
+  const q = new URLSearchParams(location.search), u = q.get('song');
+  // Opened by Cadence: ask that tab for the notes. It runs on the user's own machine, which this
+  // page may not fetch from, so the notes come over postMessage.
+  if (q.get('from') === 'cadence' && q.get('id')) {
+    let got = false;
+    addEventListener('message', e => {
+      let host = ''; try { host = new URL(e.origin).hostname; } catch (err) {}
+      if (!['127.0.0.1', 'localhost'].includes(host) || e.data?.type !== 'cadence-notes') return;
+      try { remix.load(fromCadence(e.data.song)); got = true; openSong(false); e.source?.postMessage({ type: 'gamut-loaded' }, e.origin); }
+      catch (err) { openSong(true); songMsg(err.message); }
+    });
+    const from = opener || (parent !== window ? parent : null);      // the Cadence tab (or frame) that opened this one
+    if (from) from.postMessage({ type: 'gamut-ready', id: q.get('id') }, '*');
+    setTimeout(() => { if (!got) { openSong(true); songMsg('Open the song again from Cadence.'); } }, from ? 5000 : 0);
+    return;
+  }
   if (!u) return;
   try {
     const url = new URL(u, location.href);

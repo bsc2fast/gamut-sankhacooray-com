@@ -133,4 +133,6 @@ into steps above the root.
   faithfully as a right one.
 - One root per stretch. A chord borrowed from another key is treated as
   passing notes.
-- Not deployed yet; the Cadence hand-off points at a local Gamut.
+- Cadence hand-off: Cadence opens `/?from=cadence&id=<song>`; Gamut posts `gamut-ready` to its opener
+  and Cadence answers with the notes (`cadence-notes`) by postMessage. Only messages from `127.0.0.1` or
+  `localhost` are accepted. (`?song=<url>` still fetches, for local development.)
