@@ -435,15 +435,16 @@ const MODE_ICONS = {
   fade: '<path d="M3 7h5v4h5v4h5v4h3"/>',
 };
 const KB_LO = 48, KB_HI = innerWidth < 600 ? 71 : 83; // C3 to B5 on the mapping keyboard (two octaves on phones)
-const assist = { mode: 'snap', follow: false, pos: 0, runs: 0 };
+const assist = { mode: 'snap', follow: false, thru: false, pos: 0, runs: 0 };
 try { Object.assign(assist, JSON.parse(localStorage.getItem('gamut-assist') || '{}')); assist.pos = 0; assist.runs = 0; } catch (e) {}
 if (!MODES.some(m => m.id === assist.mode)) assist.mode = 'snap';
 const fader = new Fader();
 let kmap = null;
-const midi = new Midi((n, vel) => pressKey(n, vel), renderMidi);
+const midi = new Midi((n, vel, ch) => pressKey(n, vel, ch), renderMidi);
+midi.thru = !!assist.thru; // Local Off is sent once the keyboard connects
 
 const activeMode = () => assist.mode === 'fade' ? fader.mode : assist.mode;
-const saveAssist = () => { try { localStorage.setItem('gamut-assist', JSON.stringify({ mode: assist.mode, follow: assist.follow })); } catch (e) {} };
+const saveAssist = () => { try { localStorage.setItem('gamut-assist', JSON.stringify({ mode: assist.mode, follow: assist.follow, thru: assist.thru })); } catch (e) {} };
 
 // The scale, root or mode changed: rebuild the key map and start the guide over.
 function assistReset() {
@@ -454,11 +455,14 @@ function assistReset() {
 
 function followTarget() { const seq = sequence(); return seq[assist.pos % seq.length][1]; }
 
-// One key press, from MIDI or the on-screen keyboard.
-function pressKey(n, vel = 0.8) {
+// One key press, from MIDI (with its channel) or the on-screen keyboard.
+// With "Sound from keyboard" on, a MIDI key plays back on the keyboard itself,
+// rounded to its 12 keys; the on-screen keys and everything else stay in Gamut.
+function pressKey(n, vel = 0.8, ch = null) {
   const r = resolve(activeMode(), n, state.root, rootMidi(), steps(), kmap);
   if (r.midi !== null) {
-    engine.note(r.midi, null, 0.5, voice(), null, 0.35 + 0.65 * vel);
+    if (ch !== null && midi.thruActive) midi.play(ch, n, Math.round(r.midi), vel);
+    else engine.note(r.midi, null, 0.5, voice(), null, 0.35 + 0.65 * vel);
     scene.pulse(0.5); hue.pulse(r.deg === null ? 0 : r.deg / steps().length, 0.8);
   }
   if (r.deg !== null) {
@@ -489,6 +493,14 @@ function renderMidi() {
     : midi.access ? 'No keyboard found' : 'Connect keyboard';
   b.disabled = !midi.supported;
   $('assist-btn').querySelector('.live-dot').hidden = !on;
+  const t = $('thru-btn');
+  t.hidden = !on;
+  t.setAttribute('aria-pressed', midi.thruActive);
+  t.title = !midi.out ? 'No MIDI output found for this keyboard'
+    : midi.thru ? "Gamut plays the scale on your keyboard's own sound. Press to give the keys back"
+    : "Mute the keyboard's own sound and play the scale through it";
+  t.disabled = on && !midi.out;
+  if (!$('assist').hidden) renderHint();
 }
 
 function renderFade() {
@@ -549,10 +561,16 @@ function renderAssist() {
 
   $('follow-btn').setAttribute('aria-pressed', assist.follow);
   wheel.next(target);
-  const hint = $('assist-hint');
+  renderHint();
+}
+
+function renderHint() {
+  const s = steps(), target = assist.follow ? followTarget() : null, hint = $('assist-hint');
   if (assist.follow) hint.textContent = `Next: ${label(s[target]).note}${assist.runs ? ` · run ${assist.runs + 1}` : ''}`;
   else if (assist.mode === 'fade') hint.textContent = fader.stage === 2 ? 'No help now. It returns if you slip.' : 'Stay in the scale and the help steps back.';
-  else hint.textContent = midi.connected ? '' : 'No keyboard? Tap these keys.';
+  else if (!midi.connected) hint.textContent = 'No keyboard? Tap these keys.';
+  else hint.textContent = midi.thruActive && s.some(x => Math.abs(x - Math.round(x)) > 0.01)
+    ? 'Your keyboard rounds quarter tones to the nearest key. Turn off Sound from keyboard to hear them.' : '';
 }
 
 function openAssist(open) { $('assist').hidden = !open; if (open) renderAssist(); }
@@ -561,6 +579,7 @@ $('assist-close').onclick = () => openAssist(false);
 $('assist').onclick = e => { if (e.target === $('assist')) openAssist(false); };
 $('midi-connect').onclick = () => midi.connect();
 $('assist-off').onclick = () => { assist.mode = 'free'; saveAssist(); assistReset(); };
+$('thru-btn').onclick = () => { assist.thru = !midi.thru; midi.setThru(assist.thru); saveAssist(); };
 $('follow-btn').onclick = () => { assist.follow = !assist.follow; assist.pos = 0; assist.runs = 0; saveAssist(); renderAssist(); };
 
 // ---- theme -----------------------------------------------------------------

@@ -208,8 +208,9 @@ Room lights follow the scene and flash with the music.
 - **Mode chips:** "mode of X on F" moves the root so the sounding pitches stay
   the same. Hijaz on C becomes Harmonic minor on F.
 - **Play along:** the keyboard button or `M` opens the MIDI assist page. See
-  ASSIST.md. `pressKey(n, vel)` in app.js is the one entry point for MIDI and
-  on-screen keys; it calls `resolve()` from assist.js and plays the result.
+  ASSIST.md. `pressKey(n, vel, ch)` in app.js is the one entry point for MIDI and
+  on-screen keys; it calls `resolve()` from assist.js and plays the result, in
+  Gamut or, with Sound from keyboard on, back on the keyboard via `midi.play()`.
 - **Remix a song:** `song.js` (`Remix`) owns the full-width dock along the bottom (it replaces the apps bar while a song is loaded) and the
   player; see REMIX.md. `update()` hands every scale or root pick to
   `remix.assign()` while a song is loaded; `songChanged()` goes the other way

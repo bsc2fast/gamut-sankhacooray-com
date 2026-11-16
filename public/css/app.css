@@ -300,7 +300,7 @@ kbd { min-width: 24px; padding: 3px 6px; border-radius: 6px; background: var(--s
 .assist-scale { color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #midi-connect { max-width: 300px; overflow: hidden; }
 #midi-connect span:last-child { overflow: hidden; text-overflow: ellipsis; }
-#midi-connect:disabled { cursor: default; opacity: .7; }
+#midi-connect:disabled, #thru-btn:disabled { cursor: default; opacity: .7; }
 .modes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .mode {
   padding: 12px; border: 1px solid transparent; border-radius: 14px; background: var(--surface-2); cursor: pointer; text-align: left;

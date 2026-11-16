@@ -10,8 +10,10 @@ The goal is to connect MIDI gear and use Gamut to choose the scale.
 1. **Input: done (2026-11-15).** A MIDI keyboard plays the scale through five
    assist modes (Free, Snap, Mute, White keys, Fading guide) with a mapping
    diagram and Follow the run. See ASSIST.md.
-2. **Output, send to a synth or DAW.** Choose a MIDI output port and send the
-   scale run, or quantised input, out.
+2. **Output, send to a synth or DAW.** Thru to the player's own keyboard is
+   done (2026-11-16): "Sound from keyboard" in ASSIST.md, 12 equal steps only.
+   Still to do: choose any MIDI output port and send the scale run, or
+   quantised input, out.
    - Microtones: send pitch bend per note (±2 semitone range), with one channel
      per voice (MPE style). An alternative is MTS-ESP / MIDI Tuning Standard
      SysEx (bulk tuning dump) for synths that support it.

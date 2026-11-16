@@ -66,12 +66,39 @@ own thresholds (16 notes, 90%, 60%); they are starting values to tune.
 - They don't show the mapping. Gamut's diagram labels every key with the note
   it will sound, and the wheel shows the scale's shape while you play.
 
+## Sound from keyboard (thru)
+
+A keyboard's keys and sound engine are wired together inside it, so a note
+sounds before any MIDI leaves; Gamut can't cancel it afterwards. Instead the
+chip sends Local Control Off (CC 122 = 0, on all 16 channels) to the paired
+output port, which unhooks the keys from the engine:
+
+    keys -> MIDI out -> Gamut (assist mode) -> MIDI in -> keyboard voice
+
+- Each key press goes through `resolve()` as usual; `midi.play()` sends the
+  result rounded to a whole note. Mute mode sends nothing.
+- Note-off follows the key, not the note: midi.js remembers which note each
+  held key sent. Two keys that snap to one note stop only when both are up.
+- Pedal, pitch bend, modulation and program changes pass back unchanged.
+- Local Control goes back on (after All Notes Off) when the chip is turned
+  off or the page closes. If the browser crashes, power-cycling the keyboard
+  restores it.
+- Some keyboards echo received MIDI back out. Getting CC 122 back proves it,
+  and only then are copies of what Gamut just sent dropped.
+- Microtones: the keyboard plays 12 equal steps, so quarter tones round to the
+  nearest key (the hint says so). With the chip off, Gamut plays them true.
+- The output port is the one named like the input, else the same maker, else
+  the only output. The chip is disabled when none is found.
+- On-screen keys, scale runs, the drone and Remix still sound in Gamut.
+- Some keyboards ignore CC 122 and only offer Local Control in a menu
+  (Function or MIDI settings). Turn it off there and keep the chip on.
+
 ## Not built yet
 
-- MIDI output (send the mapped notes to a synth or DAW, with pitch bend for
-  microtones). See ROADMAP.md.
-- Sustain pedal and note-off: voices decay on their own, so they aren't needed
-  yet.
+- MIDI output to any port (a synth or DAW), with pitch bend for microtones.
+  See ROADMAP.md.
+- Microtones on the keyboard itself: one channel per note with its own pitch
+  bend would play quarter tones on most GM keyboards.
 - A retention check for the Fading guide: come back the next day, play with no
   help, and compare accuracy.
 - Snap that follows melodic direction on ties, instead of always going down.

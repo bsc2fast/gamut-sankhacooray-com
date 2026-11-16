@@ -26,6 +26,8 @@ Live: https://gamut.sankhacooray.com
   the scale can snap to the nearest scale note, stay silent, or sound as
   played; white keys can play any scale in order; and a Fading guide withdraws
   the help as you improve. A piano diagram shows what every key will sound.
+  "Sound from keyboard" turns the keyboard's Local Control off and plays the
+  corrected notes back on its own voice (quarter tones round to the nearest key).
 
 - "Remix a song" (experimental) loads a MIDI file, notes exported from Cadence,
   or the built-in Happy Birthday, shows the scale of each stretch on a
@@ -41,7 +43,7 @@ public/
   js/scales.js        scale data, melakarta generator, cross-culture matching
   js/audio.js         Web Audio engine (MIDI-number API, microtone-safe)
   js/assist.js        play-along key mapping, assist modes, fading guide
-  js/midi.js          Web MIDI input
+  js/midi.js          Web MIDI input, and thru back to the keyboard
   js/remap.js         scale-to-scale note mapping, key detection (pure logic)
   js/songfile.js      song input: Cadence note export, MIDI file parser, demo
   js/song.js          remix player: scheduler, timeline dock
