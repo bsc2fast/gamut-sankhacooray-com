@@ -266,8 +266,11 @@ button { font: inherit; color: inherit; }
 .toggle .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-3); transition: background-color .2s, box-shadow .2s; }
 .toggle[aria-pressed="true"] { background: var(--surface-3); }
 .toggle[aria-pressed="true"] .dot { background: var(--acc); box-shadow: 0 0 10px var(--acc); }
-.matches { display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; min-height: 0; overflow: hidden; }
-.matches .chip small { font-weight: 600; opacity: .65; }
+.matches { display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; min-height: 0; overflow: hidden auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; }
+.matches .chip { max-width: 100%; gap: 5px; }
+.matches .chip small { font-weight: 600; opacity: .65; flex: none; }
+.matches .chip .sw { flex: none; }
+.matches .chip .nm { overflow: hidden; text-overflow: ellipsis; }
 .matches .none { color: var(--muted); font-size: 12.5px; }
 
 /* ---- about overlay ---- */
