@@ -182,8 +182,8 @@ function renderMatches() {
     const b = document.createElement('button');
     b.className = 'chip';
     const r = regionOf(o.region);
-    b.innerHTML = `<span class="sw" style="width:7px;height:7px;border-radius:50%;background:hsl(${r.hue} 75% 62%)"></span><small>${r.name} /</small><span class="nm">${o.name}</span>${kind === 'mode' ? '<small>mode</small>' : ''}`;
-    b.title = `${o.name} · ${o.o || r.name}`;
+    b.innerHTML = `<span class="sw" style="width:7px;height:7px;border-radius:50%;background:hsl(${r.hue} 75% 62%)"></span><small>${r.name} /</small><span class="nm">${o.name}</span>`;
+    b.title = `${o.name} · ${o.o || r.name}${kind === 'mode' ? ' · same notes from a different root' : ''}`;
     // Jump keeping the same notes: a mode moves the root, not the shape.
     b.onclick = () => {
       let root = state.root;
