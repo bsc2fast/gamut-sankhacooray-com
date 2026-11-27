@@ -37,6 +37,7 @@ its home culture.
 | `NOTE_NAMES` | Display names with ♭/♯ |
 | `REGIONS` | 12 regions: `id, name, tag, hue, scene, voice, drone?, groups?` |
 | `SCALES` | 255 scales: `region, id, name, steps, sub?, o, d, scene?, g?, mela?, parent?` |
+| `GENRES`, `genreOf(id)` | 19 genres: `id, name, short?, hue, scales: [{ s, why }]`. See GENRES.md |
 | `byId`, `regionOf(id)` | Lookups |
 | `melakarta(n)` | Steps for melakarta 1–72 (from the RIGA/DHANI tables) |
 | `matches(steps, selfId)` | Other scales with the same pitch set (`same`) or a rotation of it (`mode`, with the offset) |

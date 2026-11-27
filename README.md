@@ -22,6 +22,10 @@ Live: https://gamut.sankhacooray.com
 - "Draw a shape" lets you tap sockets to add notes and tap lit notes to remove
   them, building a scale and seeing what it is called around the world.
 
+- "Genre" in the left pane lists scales by the music that uses them (jazz,
+  metal, flamenco, klezmer, Indian film music and 14 more), each with a line
+  on how the genre uses it.
+
 - "Play along" connects a MIDI keyboard (Chrome, Edge, Firefox). Keys outside
   the scale can snap to the nearest scale note, stay silent, or sound as
   played; white keys can play any scale in order; and a Fading guide withdraws
@@ -83,5 +87,6 @@ CLOUDFLARE_ACCOUNT_ID=9a1da48a0f61e7cebcba39517856d87e npx wrangler deploy
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how each module works, the data format, how to add a scale, region or scene, and testing pitfalls
 - [docs/ASSIST.md](docs/ASSIST.md): the play-along modes, the research behind fading help, and how it differs from existing scale modes
+- [docs/GENRES.md](docs/GENRES.md): scales by genre, the rules for the lists, what the research says and its sources
 - [docs/REMIX.md](docs/REMIX.md): the song remix player, how notes are mapped from one scale to another and why
 - [docs/ROADMAP.md](docs/ROADMAP.md): the MIDI plan (input quantised to the scale, output with pitch-bend microtones), other ideas and known limits

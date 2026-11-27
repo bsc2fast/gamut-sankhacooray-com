@@ -1,4 +1,4 @@
-import { REGIONS, SCALES, NOTE_NAMES, byId, regionOf, matches } from './scales.js';
+import { REGIONS, SCALES, GENRES, NOTE_NAMES, byId, regionOf, genreOf, matches } from './scales.js';
 import { Engine, VOICES } from './audio.js';
 import { Wheel } from './wheel.js';
 import { Scene, lampColours } from './scene.js';
@@ -63,22 +63,38 @@ function renderRegions() {
   $('regions').innerHTML = '';
   REGIONS.forEach(r => {
     const b = document.createElement('button');
-    b.className = 'region' + (r.id === region().id ? ' on' : '');
+    b.className = 'region' + (!genre && r.id === region().id ? ' on' : '');
     b.style.setProperty('--rh', r.hue);
     b.innerHTML = `<span class="sw"></span>${r.name}`;
     b.onclick = () => { leftTab = 'scales'; pickRegion(r.id); };
     $('regions').appendChild(b);
   });
+  $('genres').innerHTML = '';
+  GENRES.forEach(g => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (g === genre ? ' on' : '');
+    b.innerHTML = `<span class="sw" style="--rh:${g.hue}"></span><span class="nm">${g.short || g.name}</span>`;
+    b.title = g.name;
+    b.onclick = () => { leftTab = 'scales'; pickGenre(g.id); };
+    $('genres').appendChild(b);
+  });
 }
 
-// Left pane shows one tab at a time: the world's regions or the current region's scales.
+// Browsing by genre: the list pane shows that genre's scales, from any region.
+// It ends when a scale outside the genre is picked.
+let genre = null;
+const inGenre = (g, s) => g.scales.some(x => x.s === s);
+const genreWhy = () => (!state.custom && genre?.scales.find(x => x.s === state.scale)?.why) || '';
+
+// Left pane shows one tab at a time: the world's regions, the genres, or the current list of scales.
 let leftTab = 'scales';
 function renderLeftTab() {
-  const w = leftTab === 'world';
-  $('tab-world').classList.toggle('on', w); $('tab-world').setAttribute('aria-selected', w);
-  $('tab-scales').classList.toggle('on', !w); $('tab-scales').setAttribute('aria-selected', !w);
-  $('tab-scales').style.setProperty('--rh', region().hue);
-  $('regions').hidden = !w; $('scales').hidden = w;
+  [['world', 'regions'], ['genre', 'genres'], ['scales', 'scales']].forEach(([t, panel]) => {
+    const on = leftTab === t;
+    $('tab-' + t).classList.toggle('on', on); $('tab-' + t).setAttribute('aria-selected', on);
+    $(panel).hidden = !on;
+  });
+  $('tab-scales').style.setProperty('--rh', genre ? genre.hue : region().hue);
 }
 
 // Sub-tab shown in the list for regions with groups; follows the picked scale.
@@ -88,6 +104,18 @@ function renderList() {
   const r = region(), box = $('scales');
   box.innerHTML = '';
   box.className = 'scales';
+  if (genre) {
+    $('list-head').textContent = genre.name;
+    genre.scales.forEach(({ s, why }) => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (s === state.scale && !state.custom ? ' on' : '');
+      b.innerHTML = `<span class="sw" style="--rh:${regionOf(s.region).hue}"></span><span class="nm">${s.name}</span>`;
+      b.title = `${regionOf(s.region).name} · ${why}`;
+      b.onclick = () => pick(s);
+      box.appendChild(b);
+    });
+    return;
+  }
   let list = SCALES.filter(s => s.region === r.id);
   $('list-head').textContent = r.name;
   let tab = null;
@@ -144,7 +172,7 @@ function renderStage() {
   $('plate-sub').textContent = sv?.changed ? `was ${NOTE_NAMES[sv.wasRoot]} ${sv.was.name}` : s.sub || r.tag;
   $('origin-text').textContent = s.o || '';
   const cap = $('caption');
-  cap.textContent = state.edit ? DRAW_HINT : s.d || '';
+  cap.textContent = state.edit ? DRAW_HINT : genreWhy() || s.d || '';
   [cap, $('plate'), $('origin')].forEach(e => { e.classList.remove('fade-in'); void e.offsetWidth; e.classList.add('fade-in'); });
 
   const pcs = s.steps.map(x => (state.root + x) % 12);
@@ -264,7 +292,7 @@ function update(push = true) {
   if (state.drone) startDrone();
   if (push) {
     const id = state.custom ? 'custom-' + state.custom.steps.join('.') : state.scale.id;
-    history.replaceState(null, '', `#${id}/${URL_NOTES[state.root]}`);
+    history.replaceState(null, '', `#${id}/${URL_NOTES[state.root]}${genre ? '/' + genre.id : ''}`);
   }
 }
 
@@ -272,16 +300,24 @@ function update(push = true) {
 // Put a scale on the wheel: a library scale, or a shape of its own (drawn, or found in a song).
 function show(s) {
   if (s.id === 'custom') state.custom = s; else { state.scale = s; state.custom = null; }
+  if (genre && !inGenre(genre, state.scale)) genre = null;
   listTab = s.g || null;
 }
 
 function pick(s) {
   state.scale = s; state.custom = null; listTab = s.g || null;
+  if (genre && !inGenre(genre, s)) genre = null;
   restartIfPlaying();
   update();
 }
 
+function pickGenre(id) {
+  genre = genreOf(id);
+  pick(inGenre(genre, state.scale) && !state.custom ? state.scale : genre.scales[0].s);
+}
+
 function pickRegion(id) {
+  genre = null;
   const first = SCALES.find(s => s.region === id && (id !== 'carnatic' || s.mela === 15)) || SCALES.find(s => s.region === id);
   pick(first);
 }
@@ -604,6 +640,7 @@ matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { t
 // ---- wiring ----------------------------------------------------------------
 $('play-btn').onclick = play;
 $('tab-world').onclick = () => { leftTab = 'world'; renderLeftTab(); };
+$('tab-genre').onclick = () => { leftTab = 'genre'; renderLeftTab(); };
 $('tab-scales').onclick = () => { leftTab = 'scales'; renderLeftTab(); };
 $('tempo').oninput = e => { state.bpm = +e.target.value; $('tempo-out').textContent = state.bpm; };
 $('tempo').onchange = restartIfPlaying;
@@ -628,13 +665,14 @@ addEventListener('keydown', e => {
   if (k === ' ') { e.preventDefault(); play(); return; }
   if (k === 'arrowright' || k === 'arrowleft') {
     e.preventDefault();
-    const list = SCALES.filter(s => s.region === current().region);
+    const list = genre ? genre.scales.map(x => x.s) : SCALES.filter(s => s.region === current().region);
     const i = list.indexOf(state.scale);
     pick(list[(i + (k === 'arrowright' ? 1 : -1) + list.length) % list.length]);
     return;
   }
   if (k === 'arrowdown' || k === 'arrowup') {
     e.preventDefault();
+    if (genre) { pickGenre(GENRES[(GENRES.indexOf(genre) + (k === 'arrowdown' ? 1 : -1) + GENRES.length) % GENRES.length].id); return; }
     const i = REGIONS.indexOf(region());
     pickRegion(REGIONS[(i + (k === 'arrowdown' ? 1 : -1) + REGIONS.length) % REGIONS.length].id);
     return;
@@ -656,13 +694,15 @@ addEventListener('keydown', e => {
 
 // ---- boot from URL ---------------------------------------------------------
 function fromHash() {
-  const [id, rn] = decodeURIComponent(location.hash.slice(1)).split('/');
+  const [id, rn, gid] = decodeURIComponent(location.hash.slice(1)).split('/');
   const ri = URL_NOTES.indexOf(rn);
   if (ri >= 0) state.root = ri;
   if (id?.startsWith('custom-')) {
     const st = id.slice(7).split('.').map(Number).filter(n => n >= 0 && n < 12);
     if (st.length) { state.custom = { id: 'custom', name: 'Your shape', sub: 'Drawn on the wheel', region: 'symmetric', steps: st, o: '', d: '' }; }
   } else if (byId[id]) state.scale = byId[id];
+  const g = genreOf(gid);
+  genre = g && !state.custom && inGenre(g, state.scale) ? g : null;
 }
 fromHash();
 themeLabel();

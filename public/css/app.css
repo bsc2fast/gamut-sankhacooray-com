@@ -123,7 +123,7 @@ button { font: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted);
   white-space: nowrap; transition: background-color .2s, color .2s;
 }
-#tab-world { flex: none; padding: 0 12px; }
+#tab-world, #tab-genre { flex: none; padding: 0 10px; }
 .ptab span:last-child { overflow: hidden; text-overflow: ellipsis; }
 .ptab:hover { color: var(--text); }
 .ptab.on { background: var(--surface-3); color: var(--text); }
@@ -140,6 +140,10 @@ button { font: inherit; color: inherit; }
 .region.on { background: var(--surface-3); }
 
 .scales { display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; min-height: 0; overflow: hidden; }
+/* Genre lists mix regions, so each chip carries its region's colour. */
+.scales .chip .sw { flex: none; width: 7px; height: 7px; border-radius: 50%; background: hsl(var(--rh) 75% 62%); }
+.scales .chip { max-width: 100%; }
+.scales .chip .nm { overflow: hidden; text-overflow: ellipsis; }
 /* Sub-tabs split a long region list (thaats and ragas by time of day, melakartas and janyas) so nothing scrolls. */
 .subtabs { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 3px; }
 .subtab {
